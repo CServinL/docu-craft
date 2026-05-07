@@ -1,24 +1,35 @@
+import importlib
 from .base import BaseRenderer
-from .weasyprint_pdf import WeasyPrintPDFRenderer
 
-# Registry: (format, engine_or_None) → renderer class
-# New renderers: add an entry here and create the module under renderers/
-_REGISTRY: dict[tuple[str, str | None], type[BaseRenderer]] = {
-    ("pdf", None):           WeasyPrintPDFRenderer,
-    ("pdf", "weasyprint"):   WeasyPrintPDFRenderer,
+# Registry: (format, engine_or_None) → "module.path:ClassName"
+# Renderers are imported only when first used.
+_REGISTRY: dict[tuple[str, str | None], str] = {
+    ("pdf", None):         "docify.renderers.weasyprint_pdf:WeasyPrintPDFRenderer",
+    ("pdf", "weasyprint"): "docify.renderers.weasyprint_pdf:WeasyPrintPDFRenderer",
 }
+
+
+def register(format: str, module_path: str, engine: str | None = None) -> None:
+    """Register a renderer for a (format, engine) pair.
+
+    module_path must be "dotted.module:ClassName", e.g.:
+        "mypackage.my_renderer:MyRenderer"
+    """
+    _REGISTRY[(format.lower(), engine.lower() if engine else None)] = module_path
 
 
 def get_renderer(format: str, engine: str | None = None) -> BaseRenderer:
     key = (format.lower(), engine.lower() if engine else None)
-    cls = _REGISTRY.get(key)
-    if cls is None:
-        available = [f"format={f!r}, engine={e!r}" for f, e in _REGISTRY]
+    path = _REGISTRY.get(key)
+    if path is None:
+        available = [f"format={f!r} engine={e!r}" for f, e in _REGISTRY]
         raise ValueError(
             f"No renderer for format={format!r}, engine={engine!r}.\n"
             f"Available: {available}"
         )
-    return cls()
+    mod_name, cls_name = path.rsplit(":", 1)
+    mod = importlib.import_module(mod_name)
+    return getattr(mod, cls_name)()
 
 
-__all__ = ["get_renderer", "BaseRenderer"]
+__all__ = ["get_renderer", "register", "BaseRenderer"]

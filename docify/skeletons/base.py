@@ -1,22 +1,17 @@
-from dataclasses import dataclass, field
 from pathlib import Path
 import yaml
 
 
-@dataclass
 class Skeleton:
-    name: str
-    sections: list[dict]
-    meta: dict = field(default_factory=dict)
+    """Base class for document skeletons.
 
-    @classmethod
-    def from_file(cls, path: Path) -> "Skeleton":
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        return cls(
-            name=path.stem,
-            sections=data.get("sections", []),
-            meta=data.get("meta", {}),
-        )
+    Subclass this in a Python module for custom validation logic.
+    For simple section lists, use YAML files instead.
+    """
+
+    name: str = ""
+    sections: list[dict] = []
+    meta: dict = {}
 
     def validate(self, body: str) -> None:
         missing = [
@@ -26,3 +21,14 @@ class Skeleton:
         ]
         if missing:
             raise ValueError(f"Document is missing required sections: {missing}")
+
+    # ── factory: build from YAML file ────────────────────────────────────────
+
+    @classmethod
+    def from_file(cls, path: Path) -> "Skeleton":
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        obj = cls()
+        obj.name     = path.stem
+        obj.sections = data.get("sections", [])
+        obj.meta     = data.get("meta", {})
+        return obj
