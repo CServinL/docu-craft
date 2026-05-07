@@ -3,6 +3,9 @@ import yaml
 from .themes import ThemeManager, Theme
 from .skeletons import SkeletonManager, Skeleton
 from .renderers import get_renderer
+from .config import load_settings
+
+_SENTINEL = object()   # distinct from None so callers can pass engine=None explicitly
 
 
 class Document:
@@ -10,7 +13,7 @@ class Document:
         self.source = Path(source)
         raw = self.source.read_text(encoding="utf-8")
         self.frontmatter, self.body = _split_frontmatter(raw)
-        self._theme: Theme | None    = None
+        self._theme: Theme | None       = None
         self._skeleton: Skeleton | None = None
 
     # --- fluent API ---
@@ -30,14 +33,43 @@ class Document:
 
     def render(
         self,
-        format: str = "pdf",
+        format: str  = _SENTINEL,   # type: ignore[assignment]
         output: str | Path | None = None,
-        engine: str | None = None,
+        engine: str | None = _SENTINEL,  # type: ignore[assignment]
+        theme:  str | None = _SENTINEL,  # type: ignore[assignment]
     ) -> Path:
+        cfg = self._resolve_settings(format, engine, theme)
+
+        if self._theme is None:
+            self._theme = ThemeManager.load(cfg["theme"])
+
         if output is None:
-            output = self.source.with_suffix(f".{format}")
-        renderer = get_renderer(format, engine)
+            output = self.source.with_suffix(f".{cfg['format']}")
+
+        renderer = get_renderer(cfg["format"], cfg["engine"])
         return renderer.render(self, Path(output))
+
+    # ── internals ────────────────────────────────────────────────────────────
+
+    def _resolve_settings(self, format, engine, theme) -> dict:
+        """Merge config layers, lowest → highest priority."""
+        # 1. hardcoded defaults + user/project config files
+        cfg = load_settings(self.source.parent)
+
+        # 2. document frontmatter
+        for key in ("format", "engine", "theme"):
+            if key in self.frontmatter:
+                cfg[key] = self.frontmatter[key]
+
+        # 3. explicit render() arguments (sentinel means "not passed")
+        if format is not _SENTINEL:
+            cfg["format"] = format
+        if engine is not _SENTINEL:
+            cfg["engine"] = engine
+        if theme is not _SENTINEL:
+            cfg["theme"] = theme
+
+        return cfg
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
