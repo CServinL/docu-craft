@@ -1,8 +1,9 @@
-from pathlib import Path
-from docu_craft.renderers.base import BaseRenderer
+from docu_craft.renderers.base import BaseTransformer
 
 
-class DummyRenderer(BaseRenderer):
-    def render(self, document, output: Path) -> Path:
-        output.write_text("dummy output")
-        return output
+class DummyTransformer(BaseTransformer):
+    input_fmt = "html"
+    output_fmt = "pdf"
+
+    def transform(self, content, **options):
+        return b"dummy-pdf"

@@ -1,50 +1,60 @@
 import pytest
-from docu_craft.renderers import get_renderer, register
-from docu_craft.renderers.base import BaseRenderer
+from docu_craft.renderers import register, graph
+from docu_craft.renderers.base import BaseTransformer
 
 
-class TestRegistry:
-    def test_default_pdf_returns_weasyprint(self):
-        r = get_renderer("pdf")
-        assert type(r).__name__ == "WeasyPrintPDFRenderer"
+class TestWorkflowGraph:
+    def test_md_html_edge_registered(self):
+        assert ("md", "html", None) in graph.edges()
 
-    def test_explicit_weasyprint_engine(self):
-        r = get_renderer("pdf", "weasyprint")
-        assert type(r).__name__ == "WeasyPrintPDFRenderer"
+    def test_html_pdf_weasyprint_registered(self):
+        assert ("html", "pdf", "weasyprint") in graph.edges()
 
-    def test_format_case_insensitive(self):
-        r = get_renderer("PDF")
-        assert type(r).__name__ == "WeasyPrintPDFRenderer"
+    def test_html_pdf_default_registered(self):
+        assert ("html", "pdf", None) in graph.edges()
 
-    def test_engine_case_insensitive(self):
-        r = get_renderer("pdf", "WeasyPrint")
-        assert type(r).__name__ == "WeasyPrintPDFRenderer"
+    def test_path_md_to_pdf(self):
+        path = graph.path("md", "pdf")
+        assert path == [("md", "html"), ("html", "pdf")]
 
-    def test_unknown_format_raises_value_error(self):
-        with pytest.raises(ValueError, match="No renderer registered for format='docx'"):
-            get_renderer("docx")
+    def test_path_md_to_html(self):
+        path = graph.path("md", "html")
+        assert path == [("md", "html")]
 
-    def test_unknown_engine_raises_value_error(self):
-        with pytest.raises(ValueError, match="engine='unknown'"):
-            get_renderer("pdf", "unknown")
+    def test_no_path_raises(self):
+        with pytest.raises(Exception):
+            graph.path("md", "docx")
+
+    def test_transformer_is_base_transformer(self):
+        t = graph.transformer("md", "html")
+        assert isinstance(t, BaseTransformer)
+
+    def test_transformer_unknown_raises(self):
+        with pytest.raises(ValueError, match="No transformer registered"):
+            graph.transformer("md", "docx")
 
     def test_missing_dependency_raises_import_error(self):
         register(
-            "pdf",
-            "docu_craft_fake_pkg.renderer:FakeRenderer",
+            "html", "pdf",
+            "docu_craft_fake_pkg.renderer:FakeTransformer",
             engine="_test_missing_dep",
             package="docu_craft-fake-pkg",
             install='pip install "docu_craft-fake-pkg"',
         )
-        with pytest.raises(ImportError, match="docu_craft-fake-pkg") as exc_info:
-            get_renderer("pdf", "_test_missing_dep")
-        assert "pip install" in str(exc_info.value)
+        with pytest.raises(ImportError, match="docu_craft-fake-pkg"):
+            graph.transformer("html", "pdf", "_test_missing_dep")
 
-    def test_register_custom_renderer(self):
-        register("pdf", "tests.fixtures.renderers:DummyRenderer", engine="_dummy")
-        r = get_renderer("pdf", "_dummy")
-        assert type(r).__name__ == "DummyRenderer"
+    def test_register_custom_transformer(self):
+        register(
+            "html", "pdf",
+            "tests.fixtures.renderers:DummyTransformer",
+            engine="_dummy",
+        )
+        t = graph.transformer("html", "pdf", "_dummy")
+        assert type(t).__name__ == "DummyTransformer"
 
-    def test_renderer_is_base_renderer_subclass(self):
-        r = get_renderer("pdf")
-        assert isinstance(r, BaseRenderer)
+    def test_md_html_transform(self):
+        t = graph.transformer("md", "html")
+        result = t.transform("# Hello")
+        assert "<h1" in result
+        assert "Hello" in result

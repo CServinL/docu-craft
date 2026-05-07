@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
+from typing import Any
 
 
-class BaseRenderer(ABC):
+class BaseTransformer(ABC):
+    input_fmt: str
+    output_fmt: str
+
     @abstractmethod
-    def render(self, document, output: Path, emoji_set: str | None = None) -> Path: ...
+    def transform(self, content: Any, **options) -> Any: ...

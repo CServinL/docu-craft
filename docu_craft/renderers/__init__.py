@@ -1,75 +1,52 @@
-import importlib
-from .base import BaseRenderer
+from .base import BaseTransformer
+from ..workflow import graph
 
-# Registry: (format, engine_or_None) → entry dict
-# "path"    — "module:ClassName" imported lazily on first use
-# "package" — PyPI package name, for the error message
-# "install" — pip install command shown to the user on ImportError
-_REGISTRY: dict[tuple[str, str | None], dict] = {
-    ("pdf", None): {
-        "path":    "docu_craft.renderers.weasyprint_pdf:WeasyPrintPDFRenderer",
-        "package": "weasyprint",
-        "install": "pip install weasyprint",
-    },
-    ("pdf", "weasyprint"): {
-        "path":    "docu_craft.renderers.weasyprint_pdf:WeasyPrintPDFRenderer",
-        "package": "weasyprint",
-        "install": "pip install weasyprint",
-    },
-    ("pdf", "reportlab"): {
-        "path":    "docu_craft.renderers.reportlab_pdf:ReportLabPDFRenderer",
-        "package": "reportlab",
-        "install": 'pip install "docu_craft[reportlab]"',
-    },
-}
+# md → html
+graph.register(
+    "md", "html",
+    "docu_craft.renderers.md_html:MdHtmlTransformer",
+)
+
+# html → pdf (weasyprint)
+graph.register(
+    "html", "pdf",
+    "docu_craft.renderers.weasyprint_pdf:WeasyprintTransformer",
+    engine="weasyprint",
+    package="weasyprint",
+    install="pip install weasyprint",
+)
+
+# html → pdf (default, same transformer)
+graph.register(
+    "html", "pdf",
+    "docu_craft.renderers.weasyprint_pdf:WeasyprintTransformer",
+    package="weasyprint",
+    install="pip install weasyprint",
+)
+
+# html → pdf (reportlab)
+graph.register(
+    "html", "pdf",
+    "docu_craft.renderers.reportlab_pdf:ReportLabTransformer",
+    engine="reportlab",
+    package="reportlab",
+    install='pip install "docu-craft[reportlab]"',
+)
 
 
 def register(
-    format: str,
+    from_fmt: str,
+    to_fmt: str,
     module_path: str,
     engine: str | None = None,
     package: str | None = None,
     install: str | None = None,
 ) -> None:
-    """Register a renderer for a (format, engine) pair.
-
-    module_path  — "dotted.module:ClassName"
-    package      — PyPI name shown in missing-dependency errors
-    install      — full pip command shown to the user (defaults to 'pip install <package>')
-    """
-    pkg = package or module_path.split(".")[0]
-    _REGISTRY[(format.lower(), engine.lower() if engine else None)] = {
-        "path":    module_path,
-        "package": pkg,
-        "install": install or f"pip install {pkg}",
-    }
+    graph.register(from_fmt, to_fmt, module_path, engine, package, install)
 
 
-def get_renderer(format: str, engine: str | None = None) -> BaseRenderer:
-    key = (format.lower(), engine.lower() if engine else None)
-    entry = _REGISTRY.get(key)
-
-    if entry is None:
-        available = [
-            f"format={f!r}" + (f" engine={e!r}" if e else "")
-            for f, e in _REGISTRY
-        ]
-        raise ValueError(
-            f"No renderer registered for format={format!r}"
-            + (f", engine={engine!r}" if engine else "")
-            + f".\nAvailable: {available}"
-        )
-
-    mod_name, cls_name = entry["path"].rsplit(":", 1)
-    try:
-        mod = importlib.import_module(mod_name)
-    except ImportError:
-        raise ImportError(
-            f"Renderer '{entry['path']}' requires '{entry['package']}' which is not installed.\n"
-            f"Install it with:  {entry['install']}"
-        ) from None
-
-    return getattr(mod, cls_name)()
+def run(content, from_fmt: str, to_fmt: str, engine: str | None = None, **options):
+    return graph.run(content, from_fmt, to_fmt, engine, **options)
 
 
-__all__ = ["get_renderer", "register", "BaseRenderer"]
+__all__ = ["BaseTransformer", "graph", "register", "run"]

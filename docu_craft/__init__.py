@@ -2,8 +2,8 @@ from .document import Document
 from .themes import ThemeManager
 from .skeletons import SkeletonManager
 from .skeletons.manager import register as register_skeleton
-from .renderers import get_renderer
-from .renderers import register as register_renderer
+from .renderers import register as register_transformer
+from .workflow import graph as workflow
 from .config import add_extended_store
 from .storage import registry, StorageRegistry, Store, StoreKind
 from pathlib import Path
@@ -26,9 +26,9 @@ __all__ = [
     "Document",
     "ThemeManager",
     "SkeletonManager",
-    "get_renderer",
-    "register_renderer",
+    "register_transformer",
     "register_skeleton",
+    "workflow",
     "add_extended_store",
     "registry",
     "StorageRegistry",

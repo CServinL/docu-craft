@@ -1,39 +1,35 @@
 from pathlib import Path
-import markdown
 from weasyprint import HTML, CSS
-from .base import BaseRenderer
-from ..emoji import EmojiManager, replace_emoji
-
-_MD_EXTENSIONS = ["tables", "fenced_code", "codehilite", "toc", "attr_list"]
-
-_HTML_WRAPPER = """\
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"></head>
-<body>
-{body}
-</body>
-</html>
-"""
+from .base import BaseTransformer
 
 
-class WeasyPrintPDFRenderer(BaseRenderer):
-    def render(self, document, output: Path, emoji_set: str | None = None) -> Path:
-        html_body = markdown.markdown(document.body, extensions=_MD_EXTENSIONS)
+class WeasyprintTransformer(BaseTransformer):
+    """HTML → PDF via WeasyPrint."""
 
-        if emoji_set:
-            set_dir = EmojiManager.set_dir(emoji_set)
-            html_body = replace_emoji(html_body, set_dir)
+    input_fmt = "html"
+    output_fmt = "pdf"
 
-        full_html = _HTML_WRAPPER.format(body=html_body)
-
+    def transform(self, content: str, **options) -> bytes:
+        """
+        options:
+            css (str|None)      — additional CSS string
+            base_url (str|None) — base URL for resolving relative assets
+            output (Path|None)  — if given, write PDF to this path and return it;
+                                  otherwise return raw bytes
+        """
         stylesheets = []
-        if document._theme:
-            stylesheets.append(CSS(string=document._theme.css))
+        css = options.get("css")
+        if css:
+            stylesheets.append(CSS(string=css))
 
-        HTML(
-            string=full_html,
-            base_url=str(document.source.parent),
-        ).write_pdf(str(output), stylesheets=stylesheets)
+        base_url = options.get("base_url")
+        pdf_bytes = HTML(string=content, base_url=base_url).write_pdf(
+            stylesheets=stylesheets
+        )
 
-        return output
+        output = options.get("output")
+        if output:
+            Path(output).write_bytes(pdf_bytes)
+            return Path(output)
+
+        return pdf_bytes

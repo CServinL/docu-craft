@@ -2,7 +2,7 @@ from pathlib import Path
 import yaml
 from .themes import ThemeManager, Theme
 from .skeletons import SkeletonManager, Skeleton
-from .renderers import get_renderer
+from .workflow import graph as _workflow
 from .config import load_settings
 
 _SENTINEL = object()   # distinct from None so callers can pass engine=None explicitly
@@ -47,8 +47,18 @@ class Document:
         if output is None:
             output = self.source.with_suffix(f".{cfg['format']}")
 
-        renderer = get_renderer(cfg["format"], cfg["engine"])
-        return renderer.render(self, Path(output), emoji_set=cfg["emoji_set"])
+        css = self._theme.css if self._theme else None
+        result = _workflow.run(
+            self.body,
+            from_fmt="md",
+            to_fmt=cfg["format"],
+            engine=cfg["engine"],
+            emoji_set=cfg["emoji_set"],
+            css=css,
+            base_url=str(self.source.parent),
+            output=Path(output),
+        )
+        return result if isinstance(result, Path) else Path(output)
 
     # ── internals ────────────────────────────────────────────────────────────
 

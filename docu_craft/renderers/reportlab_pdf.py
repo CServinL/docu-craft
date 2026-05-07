@@ -1,24 +1,17 @@
-from pathlib import Path
-
 from reportlab.lib.pagesizes import A4          # noqa: F401 — triggers ImportError if missing
 from reportlab.platypus import SimpleDocTemplate # noqa: F401
 
-from .base import BaseRenderer
-
-# TODO: implement full ReportLab pipeline
-# Rough plan:
-#   1. Parse document.body (Markdown AST → ReportLab Flowables)
-#   2. Apply document._theme — map theme.meta to ReportLab styles (ParagraphStyle, TableStyle)
-#   3. Build SimpleDocTemplate with page size / margins from theme
-#   4. doc.build(flowables) → output PDF
-#
-# ReportLab gives pixel-level control: custom fonts, headers/footers as Flowables,
-# vector drawings, precise table layouts — use it when WeasyPrint CSS isn't enough.
+from .base import BaseTransformer
 
 
-class ReportLabPDFRenderer(BaseRenderer):
-    def render(self, document, output: Path, emoji_set: str | None = None) -> Path:
+class ReportLabTransformer(BaseTransformer):
+    """HTML → PDF via ReportLab (not yet implemented)."""
+
+    input_fmt = "html"
+    output_fmt = "pdf"
+
+    def transform(self, content: str, **options):
         raise NotImplementedError(
-            "ReportLabPDFRenderer is not implemented yet.\n"
+            "ReportLab transformer is not implemented yet.\n"
             "Use engine='weasyprint' in the meantime."
         )
