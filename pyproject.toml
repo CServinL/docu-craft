@@ -3,10 +3,31 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "docify"
-version = "0.1.0"
+name        = "docify"
+version     = "0.1.0"
 description = "Convert Markdown to polished documents with reusable themes"
+readme      = "README.md"
 requires-python = ">=3.10"
+license     = { text = "Apache-2.0" }
+authors     = [
+    { name = "Christian A. Servin Lozano", email = "cservinl@hotmail.com" }
+]
+keywords    = ["markdown", "pdf", "document", "themes", "latex", "weasyprint", "reportlab"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Office/Business",
+    "Topic :: Documentation",
+]
 dependencies = [
     "markdown>=3.5",
     "weasyprint>=60",
@@ -14,6 +35,12 @@ dependencies = [
     "jinja2>=3.1",
     "Pygments>=2.16",
 ]
+
+[project.urls]
+Homepage      = "https://github.com/CServinL/Docify"
+Repository    = "https://github.com/CServinL/Docify"
+Documentation = "https://github.com/CServinL/Docify/tree/main/docs"
+"Bug Tracker" = "https://github.com/CServinL/Docify/issues"
 
 [project.optional-dependencies]
 reportlab = ["reportlab>=4.0"]
