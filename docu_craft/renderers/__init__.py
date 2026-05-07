@@ -33,6 +33,19 @@ graph.register(
     install='pip install "docu-craft[reportlab]"',
 )
 
+# md → latex
+graph.register(
+    "md", "latex",
+    "docu_craft.renderers.md_latex:MdLatexTransformer",
+)
+
+# latex → pdf
+graph.register(
+    "latex", "pdf",
+    "docu_craft.renderers.latex_pdf:LatexPdfTransformer",
+    engine="latex",
+)
+
 
 def register(
     from_fmt: str,

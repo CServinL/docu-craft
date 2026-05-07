@@ -2,4 +2,6 @@ name: Scholar
 description: Academic article style — serif fonts, wide margins, formal structure
 author: docu-craft
 version: "1.0"
-targets: [pdf, html]
+targets: [pdf, html, latex]
+latex:
+  doc_class: "12pt,a4paper"

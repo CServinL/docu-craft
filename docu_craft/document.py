@@ -47,16 +47,21 @@ class Document:
         if output is None:
             output = self.source.with_suffix(f".{cfg['format']}")
 
-        css = self._theme.css if self._theme else None
+        theme_opts = {}
+        if self._theme:
+            theme_opts["css"]             = self._theme.css
+            theme_opts["preamble"]        = self._theme.latex_preamble
+            theme_opts["doc_class"]       = self._theme.latex_doc_class
+
         result = _workflow.run(
             self.body,
             from_fmt="md",
             to_fmt=cfg["format"],
             engine=cfg["engine"],
             emoji_set=cfg["emoji_set"],
-            css=css,
             base_url=str(self.source.parent),
             output=Path(output),
+            **theme_opts,
         )
         return result if isinstance(result, Path) else Path(output)
 
