@@ -13,8 +13,11 @@ def render(
     format: str = "pdf",
     output: str | Path | None = None,
     engine: str | None = None,
+    emoji_set: str | None = None,
 ) -> Path:
-    return Document(source).apply_theme(theme).render(format=format, output=output, engine=engine)
+    return Document(source).apply_theme(theme).render(
+        format=format, output=output, engine=engine, emoji_set=emoji_set
+    )
 
 
 __all__ = [
