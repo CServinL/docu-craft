@@ -33,12 +33,13 @@ class Document:
 
     def render(
         self,
-        format: str  = _SENTINEL,   # type: ignore[assignment]
-        output: str | Path | None = None,
-        engine: str | None = _SENTINEL,  # type: ignore[assignment]
-        theme:  str | None = _SENTINEL,  # type: ignore[assignment]
+        format:    str        = _SENTINEL,  # type: ignore[assignment]
+        output:    str | Path | None = None,
+        engine:    str | None = _SENTINEL,  # type: ignore[assignment]
+        theme:     str | None = _SENTINEL,  # type: ignore[assignment]
+        emoji_set: str | None = _SENTINEL,  # type: ignore[assignment]
     ) -> Path:
-        cfg = self._resolve_settings(format, engine, theme)
+        cfg = self._resolve_settings(format, engine, theme, emoji_set)
 
         if self._theme is None:
             self._theme = ThemeManager.load(cfg["theme"])
@@ -47,27 +48,27 @@ class Document:
             output = self.source.with_suffix(f".{cfg['format']}")
 
         renderer = get_renderer(cfg["format"], cfg["engine"])
-        return renderer.render(self, Path(output))
+        return renderer.render(self, Path(output), emoji_set=cfg["emoji_set"])
 
     # ── internals ────────────────────────────────────────────────────────────
 
-    def _resolve_settings(self, format=_SENTINEL, engine=_SENTINEL, theme=_SENTINEL) -> dict:
-        """Merge config layers, lowest → highest priority."""
-        # 1. hardcoded defaults + user/project config files
+    def _resolve_settings(
+        self,
+        format    = _SENTINEL,
+        engine    = _SENTINEL,
+        theme     = _SENTINEL,
+        emoji_set = _SENTINEL,
+    ) -> dict:
         cfg = load_settings(self.source.parent)
 
-        # 2. document frontmatter
-        for key in ("format", "engine", "theme"):
+        for key in ("format", "engine", "theme", "emoji_set"):
             if key in self.frontmatter:
                 cfg[key] = self.frontmatter[key]
 
-        # 3. explicit render() arguments (sentinel means "not passed")
-        if format is not _SENTINEL:
-            cfg["format"] = format
-        if engine is not _SENTINEL:
-            cfg["engine"] = engine
-        if theme is not _SENTINEL:
-            cfg["theme"] = theme
+        if format    is not _SENTINEL: cfg["format"]    = format
+        if engine    is not _SENTINEL: cfg["engine"]    = engine
+        if theme     is not _SENTINEL: cfg["theme"]     = theme
+        if emoji_set is not _SENTINEL: cfg["emoji_set"] = emoji_set
 
         return cfg
 

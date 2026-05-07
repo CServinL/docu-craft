@@ -17,7 +17,7 @@ from .base import BaseRenderer
 
 
 class ReportLabPDFRenderer(BaseRenderer):
-    def render(self, document, output: Path) -> Path:
+    def render(self, document, output: Path, emoji_set: str | None = None) -> Path:
         raise NotImplementedError(
             "ReportLabPDFRenderer is not implemented yet.\n"
             "Use engine='weasyprint' in the meantime."

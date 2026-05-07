@@ -1,20 +1,22 @@
 from pathlib import Path
 import yaml
 
-DOCIFY_HOME        = Path.home() / "docify"
-USER_THEMES_DIR    = DOCIFY_HOME / "themes"
-USER_SKELETONS_DIR = DOCIFY_HOME / "skeletons"
-USER_CONFIG_FILE   = DOCIFY_HOME / "config.yaml"
+DOCIFY_HOME          = Path.home() / "docify"
+USER_THEMES_DIR      = DOCIFY_HOME / "themes"
+USER_SKELETONS_DIR   = DOCIFY_HOME / "skeletons"
+USER_EMOJI_SETS_DIR  = DOCIFY_HOME / "emoji-sets"
+USER_CONFIG_FILE     = DOCIFY_HOME / "config.yaml"
 
 _HARDCODED_DEFAULTS: dict = {
-    "format": "pdf",
-    "engine": None,
-    "theme":  "scholar",
+    "format":    "pdf",
+    "engine":    None,
+    "theme":     "scholar",
+    "emoji_set": None,       # None = leave emoji as-is
 }
 
 
 def ensure_home() -> None:
-    for d in [USER_THEMES_DIR, USER_SKELETONS_DIR]:
+    for d in [USER_THEMES_DIR, USER_SKELETONS_DIR, USER_EMOJI_SETS_DIR]:
         d.mkdir(parents=True, exist_ok=True)
 
 
