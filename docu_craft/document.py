@@ -49,10 +49,12 @@ class Document:
 
         theme_opts = {}
         if self._theme:
-            theme_opts["css"]             = self._theme.css
-            theme_opts["preamble"]        = self._theme.latex_preamble
-            theme_opts["doc_class"]       = self._theme.latex_doc_class
+            theme_opts["style"]     = self._theme.style
+            theme_opts["css"]       = self._theme.css
+            theme_opts["preamble"]  = self._theme.latex_preamble
+            theme_opts["doc_class"] = self._theme.latex_doc_class
 
+        output = Path(output)
         result = _workflow.run(
             self.body,
             from_fmt="md",
@@ -60,10 +62,16 @@ class Document:
             engine=cfg["engine"],
             emoji_set=cfg["emoji_set"],
             base_url=str(self.source.parent),
-            output=Path(output),
+            output=output,
             **theme_opts,
         )
-        return result if isinstance(result, Path) else Path(output)
+        if isinstance(result, Path):
+            return result
+        if isinstance(result, bytes):
+            output.write_bytes(result)
+        else:
+            output.write_text(result, encoding="utf-8")
+        return output
 
     # ── internals ────────────────────────────────────────────────────────────
 

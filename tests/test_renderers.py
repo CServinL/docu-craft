@@ -23,7 +23,7 @@ class TestWorkflowGraph:
 
     def test_no_path_raises(self):
         with pytest.raises(Exception):
-            graph.path("md", "docx")
+            graph.path("md", "rtf")
 
     def test_transformer_is_base_transformer(self):
         t = graph.transformer("md", "html")
@@ -31,7 +31,7 @@ class TestWorkflowGraph:
 
     def test_transformer_unknown_raises(self):
         with pytest.raises(ValueError, match="No transformer registered"):
-            graph.transformer("md", "docx")
+            graph.transformer("md", "rtf")
 
     def test_missing_dependency_raises_import_error(self):
         register(

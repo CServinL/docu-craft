@@ -1,6 +1,7 @@
 import markdown
 from .base import BaseTransformer
 from ..emoji import EmojiManager, replace_emoji
+from ..themes.base import resolve_font
 
 _EXTENSIONS = ["tables", "fenced_code", "codehilite", "toc", "attr_list"]
 
@@ -37,7 +38,22 @@ class MdHtmlTransformer(BaseTransformer):
             set_dir = EmojiManager.set_dir(emoji_set)
             body = replace_emoji(body, set_dir)
 
+        # If no explicit CSS, generate minimal CSS from style dict
         css = options.get("css", "")
+        if not css:
+            s = options.get("style", {})
+            fonts = s.get("fonts", {})
+            body_font   = resolve_font(fonts.get("body",   ["serif"]), "html")
+            header_font = resolve_font(fonts.get("header", ["sans-serif"]), "html")
+            mono_font   = resolve_font(fonts.get("mono",   ["monospace"]), "html")
+            colors = s.get("colors", {})
+            css = (
+                f"body {{ font-family: {body_font}; font-size: {s.get('font_size', 11)}pt; }}\n"
+                f"h1,h2,h3,h4,h5,h6 {{ font-family: {header_font}; }}\n"
+                f"code,pre {{ font-family: {mono_font}; }}\n"
+                f"body {{ color: {colors.get('body', '#1a1a1a')}; }}\n"
+                f"h1,h2,h3 {{ color: {colors.get('heading', '#1a1a2e')}; }}\n"
+            )
         style = f"<style>{css}</style>" if css else ""
 
         return _WRAPPER.format(body=body, style=style)

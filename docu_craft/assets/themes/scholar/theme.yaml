@@ -2,6 +2,29 @@ name: Scholar
 description: Academic article style — serif fonts, wide margins, formal structure
 author: docu-craft
 version: "1.0"
-targets: [pdf, html, latex]
+targets: [pdf, html, latex, docx, odf]
+
+style:
+  fonts:
+    body:   ["Georgia", "Times New Roman", "serif"]
+    header: ["Arial", "Helvetica", "sans-serif"]
+    mono:   ["Courier New", "Courier", "monospace"]
+  font_size:   11
+  line_height: 1.65
+  page_margin: "2.5cm"
+  page_size:   "a4"
+  colors:
+    body:         "#1a1a1a"
+    heading:      "#1a1a2e"
+    heading_text: "#ffffff"
+    accent:       "#1a1a2e"
+    border:       "#e0e0e0"
+    row_alt:      "#f7f7f9"
+    code_bg:      "#f4f4f4"
+
+html:
+  css: style.css
+
 latex:
   doc_class: "12pt,a4paper"
+  preamble:  latex/preamble.tex

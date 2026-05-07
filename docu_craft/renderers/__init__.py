@@ -37,7 +37,31 @@ graph.register(
     priority=5,
 )
 
-# md → latex  (priority 5 — secondary md→? path, tagged engine=latex for preference routing)
+# md → docx
+graph.register(
+    "md", "docx",
+    "docu_craft.renderers.md_docx:MdDocxTransformer",
+    package="python-docx",
+    install='pip install "docu-craft[docx]"',
+    priority=1,
+)
+
+# md → odf
+graph.register(
+    "md", "odf",
+    "docu_craft.renderers.md_odf:MdOdfTransformer",
+    package="odfpy",
+    install="pip install odfpy",
+    priority=1,
+)
+
+# md → latex  (registered twice: once as default for direct format requests,
+#              once tagged engine=latex for path preference routing)
+graph.register(
+    "md", "latex",
+    "docu_craft.renderers.md_latex:MdLatexTransformer",
+    priority=5,
+)
 graph.register(
     "md", "latex",
     "docu_craft.renderers.md_latex:MdLatexTransformer",

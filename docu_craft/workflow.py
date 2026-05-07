@@ -9,7 +9,7 @@ from typing import Any
 
 import networkx as nx
 
-_STYLE_KEYS = ("css", "preamble", "doc_class", "emoji_set")
+_STYLE_KEYS = ("style", "css", "preamble", "doc_class", "emoji_set")
 
 
 @dataclass
