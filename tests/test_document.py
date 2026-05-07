@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from docify import Document
+from docu_craft import Document
 
 
 class TestFrontmatterParsing:
@@ -36,7 +36,7 @@ class TestSettingsResolution:
         assert cfg["theme"] == "handout"
 
     def test_frontmatter_wins_over_project_config(self, sample_md_with_frontmatter, tmp_dir):
-        (tmp_dir / ".docify.yaml").write_text("defaults:\n  theme: handout\n  engine: reportlab\n")
+        (tmp_dir / ".docu_craft.yaml").write_text("defaults:\n  theme: handout\n  engine: reportlab\n")
         doc = Document(sample_md_with_frontmatter)
         cfg = doc._resolve_settings()   # no explicit args — frontmatter vs project config
         # frontmatter has engine=weasyprint, theme=scholar — beats project config
@@ -44,7 +44,7 @@ class TestSettingsResolution:
         assert cfg["theme"] == "scholar"
 
     def test_project_config_wins_over_hardcoded_defaults(self, sample_md, tmp_dir):
-        (tmp_dir / ".docify.yaml").write_text("defaults:\n  theme: handout\n")
+        (tmp_dir / ".docu_craft.yaml").write_text("defaults:\n  theme: handout\n")
         doc = Document(sample_md)
         cfg = doc._resolve_settings()
         assert cfg["theme"] == "handout"

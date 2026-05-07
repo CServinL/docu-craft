@@ -12,7 +12,7 @@ A skeleton defines the expected structure of a document and can validate that re
 ## YAML skeleton (simple)
 
 ```
-~/docify/skeletons/thesis.yaml
+~/docu_craft/skeletons/thesis.yaml
 ```
 
 ```yaml
@@ -28,7 +28,7 @@ sections:
 ## Python module skeleton (custom logic)
 
 ```python
-from docify.skeletons import Skeleton
+from docu_craft.skeletons import Skeleton
 
 class ThesisSkeleton(Skeleton):
     name = "thesis"
@@ -53,7 +53,7 @@ doc.apply_skeleton("academic_article")
 doc.apply_skeleton("mypackage.skeletons:ThesisSkeleton")
 
 # register once, use by name
-import docify
-docify.register_skeleton("thesis", "mypackage.skeletons:ThesisSkeleton")
+import docu_craft
+docu_craft.register_skeleton("thesis", "mypackage.skeletons:ThesisSkeleton")
 doc.apply_skeleton("thesis")
 ```

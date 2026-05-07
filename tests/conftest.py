@@ -40,6 +40,6 @@ def sample_md_with_frontmatter(tmp_dir):
 
 @pytest.fixture
 def project_config(tmp_dir):
-    cfg = tmp_dir / ".docify.yaml"
+    cfg = tmp_dir / ".docu_craft.yaml"
     cfg.write_text("defaults:\n  engine: weasyprint\n  theme: handout\n")
     return tmp_dir

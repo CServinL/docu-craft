@@ -1,18 +1,18 @@
-# Docify
+# DocuCraft
 
 Stop writing PDFs by hand. Write Markdown, get a polished document.
 
 ```python
-import docify
+import docu_craft
 
-docify.render("report.md", theme="scholar")
+docu_craft.render("report.md", theme="scholar")
 ```
 
 ---
 
 ## What it does
 
-You write content in Markdown. Docify handles everything else:
+You write content in Markdown. DocuCraft handles everything else:
 
 - **Picks a theme** — fonts, colors, margins, tables, code blocks, all styled consistently
 - **Validates structure** — checks that your document has the sections it needs before rendering
@@ -26,13 +26,13 @@ No more pasting CSS into scripts. No more fighting with PDF libraries. No more `
 ## Install
 
 ```bash
-pip install docify
+pip install docu_craft
 
 # with ReportLab support
-pip install "docify[reportlab]"
+pip install "docu_craft[reportlab]"
 
 # everything
-pip install "docify[all]"
+pip install "docu_craft[all]"
 ```
 
 ---
@@ -49,20 +49,20 @@ Built-in themes, ready to use:
 | `official` | Institutional letters, formal reports |
 
 ```python
-docify.render("thesis.md", theme="scholar")
-docify.render("class_notes.md", theme="handout")
+docu_craft.render("thesis.md", theme="scholar")
+docu_craft.render("class_notes.md", theme="handout")
 ```
 
-Drop your own theme in `~/docify/themes/mytheme/style.css` and use it the same way.
+Drop your own theme in `~/docu_craft/themes/mytheme/style.css` and use it the same way.
 
 ---
 
 ## Skeletons
 
-Skeletons define what sections a document should have. Docify tells you if something is missing before you render.
+Skeletons define what sections a document should have. DocuCraft tells you if something is missing before you render.
 
 ```python
-doc = docify.Document("thesis.md")
+doc = docu_craft.Document("thesis.md")
 doc.apply_skeleton("academic_article").validate()  # raises if Introducción or Conclusiones missing
 doc.render()
 ```
@@ -75,17 +75,17 @@ Write your own in YAML or as a Python class with custom validation logic.
 
 ## Emoji in PDFs
 
-PDF fonts don't render emoji. Docify swaps them for PNG images automatically.
+PDF fonts don't render emoji. DocuCraft swaps them for PNG images automatically.
 
 ```python
-docify.render("notes.md", theme="scholar", emoji_set="twemoji")
+docu_craft.render("notes.md", theme="scholar", emoji_set="twemoji")
 ```
 
 Two sets ship with the package: `noto-minimal` (60 common emoji, Apache 2.0) and `twemoji` (3800+ emoji, CC-BY 4.0). Download more:
 
 ```bash
-python -m docify.emoji.downloader twemoji
-python -m docify.emoji.downloader noto
+python -m docu_craft.emoji.downloader twemoji
+python -m docu_craft.emoji.downloader noto
 ```
 
 ---
@@ -95,14 +95,14 @@ python -m docify.emoji.downloader noto
 Set defaults once, override whenever you need:
 
 ```yaml
-# ~/docify/config.yaml — your personal defaults
+# ~/docu_craft/config.yaml — your personal defaults
 defaults:
   theme: scholar
   emoji_set: twemoji
 ```
 
 ```yaml
-# .docify.yaml — per-project overrides
+# .docu_craft.yaml — per-project overrides
 defaults:
   theme: handout
 ```
@@ -116,25 +116,25 @@ theme: official
 
 ```python
 # Explicit argument wins over all of the above
-docify.render("file.md", theme="tech-doc")
+docu_craft.render("file.md", theme="tech-doc")
 ```
 
 ---
 
 ## Extended storage
 
-Point Docify at any folder — a team share, a mounted drive, a network path. It searches all of them for themes, skeletons, and emoji sets.
+Point DocuCraft at any folder — a team share, a mounted drive, a network path. It searches all of them for themes, skeletons, and emoji sets.
 
 ```python
-docify.add_extended_store("/mnt/team/docify-assets", name="team")
-docify.add_extended_store("G:/Shared/styles", name="gdrive")
+docu_craft.add_extended_store("/mnt/team/docu_craft-assets", name="team")
+docu_craft.add_extended_store("G:/Shared/styles", name="gdrive")
 ```
 
-Or declare it in `.docify.yaml`:
+Or declare it in `.docu_craft.yaml`:
 
 ```yaml
 extended_stores:
-  - /mnt/team/docify-assets
+  - /mnt/team/docu_craft-assets
   - path: G:/Shared/styles
     name: gdrive
 ```
@@ -144,7 +144,7 @@ extended_stores:
 ## Pluggable renderers
 
 ```python
-docify.register_renderer(
+docu_craft.register_renderer(
     format="pdf",
     module_path="mypackage.renderer:MyRenderer",
     engine="myengine",

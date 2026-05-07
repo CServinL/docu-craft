@@ -2,7 +2,7 @@
 
 import pytest
 from pathlib import Path
-from docify.storage import StorageRegistry, Store, StoreKind
+from docu_craft.storage import StorageRegistry, Store, StoreKind
 
 
 # ── fixtures ──────────────────────────────────────────────────────────────────
@@ -35,35 +35,35 @@ def populated_registry(tmp_dir):
 
 class TestBundledStore:
     def test_bundled_store_is_readonly(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         bundled = next(s for s in registry.all() if s.kind == StoreKind.BUNDLED)
         assert bundled.readonly is True
 
     def test_bundled_store_has_themes(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         dirs = registry.search("themes")
         assert any(d.is_dir() for d in dirs)
 
     def test_bundled_themes_include_scholar(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         found = registry.find_asset("themes", "scholar")
         assert found is not None
         assert (found / "style.css").exists()
 
     def test_bundled_skeletons_include_academic_article(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         dirs = registry.search("skeletons")
         found = any((d / "academic_article.yaml").exists() for d in dirs)
         assert found
 
     def test_bundled_emoji_includes_noto_minimal(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         found = registry.find_asset("emoji-sets", "noto-minimal")
         assert found is not None
         assert any(found.glob("*.png"))
 
     def test_bundled_store_kind(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         bundled = next(s for s in registry.all() if s.kind == StoreKind.BUNDLED)
         assert bundled.kind == StoreKind.BUNDLED
 
@@ -72,17 +72,17 @@ class TestBundledStore:
 
 class TestUserStore:
     def test_user_store_is_not_readonly(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         user = next(s for s in registry.all() if s.kind == StoreKind.USER)
         assert user.readonly is False
 
     def test_user_store_kind(self):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         user = next(s for s in registry.all() if s.kind == StoreKind.USER)
         assert user.kind == StoreKind.USER
 
     def test_user_theme_overrides_bundled(self, tmp_dir):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         user_root = tmp_dir / "user_override"
         scholar   = user_root / "themes" / "scholar"
         scholar.mkdir(parents=True)
@@ -91,14 +91,14 @@ class TestUserStore:
 
         store = registry.add(user_root, kind=StoreKind.USER, name="test-user")
         try:
-            from docify import ThemeManager
+            from docu_craft import ThemeManager
             theme = ThemeManager.load("scholar")
             assert theme.css == "body { color: hotpink; }"
         finally:
             registry.remove(user_root)
 
     def test_user_skeleton_overrides_bundled(self, tmp_dir):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         user_root  = tmp_dir / "user_skel"
         skel_dir   = user_root / "skeletons"
         skel_dir.mkdir(parents=True)
@@ -107,7 +107,7 @@ class TestUserStore:
         )
         store = registry.add(user_root, kind=StoreKind.USER, name="test-user-skel")
         try:
-            from docify import SkeletonManager
+            from docu_craft import SkeletonManager
             s = SkeletonManager.load("academic_article")
             assert s.sections[0]["heading"] == "Custom"
         finally:
@@ -130,8 +130,8 @@ class TestExtendedStore:
         assert owning_store.kind == StoreKind.EXTENDED
 
     def test_add_extended_store(self, tmp_dir):
-        from docify import add_extended_store
-        from docify.storage import registry
+        from docu_craft import add_extended_store
+        from docu_craft.storage import registry
         store_path = tmp_dir / "team_store"
         store_path.mkdir()
         store = add_extended_store(store_path, name="team")
@@ -142,7 +142,7 @@ class TestExtendedStore:
             registry.remove(store_path)
 
     def test_extended_store_removed(self, tmp_dir):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         store_path = tmp_dir / "removable"
         store_path.mkdir()
         registry.add(store_path, kind=StoreKind.EXTENDED)
@@ -150,7 +150,7 @@ class TestExtendedStore:
         assert not any(s.path == store_path for s in registry.all())
 
     def test_multiple_extended_stores_last_added_wins(self, tmp_dir):
-        from docify.storage import registry
+        from docu_craft.storage import registry
         for name in ("ext_a", "ext_b"):
             root = tmp_dir / name
             (root / "themes" / "shared").mkdir(parents=True)

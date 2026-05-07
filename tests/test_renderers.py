@@ -1,6 +1,6 @@
 import pytest
-from docify.renderers import get_renderer, register
-from docify.renderers.base import BaseRenderer
+from docu_craft.renderers import get_renderer, register
+from docu_craft.renderers.base import BaseRenderer
 
 
 class TestRegistry:
@@ -31,12 +31,12 @@ class TestRegistry:
     def test_missing_dependency_raises_import_error(self):
         register(
             "pdf",
-            "docify_fake_pkg.renderer:FakeRenderer",
+            "docu_craft_fake_pkg.renderer:FakeRenderer",
             engine="_test_missing_dep",
-            package="docify-fake-pkg",
-            install='pip install "docify-fake-pkg"',
+            package="docu_craft-fake-pkg",
+            install='pip install "docu_craft-fake-pkg"',
         )
-        with pytest.raises(ImportError, match="docify-fake-pkg") as exc_info:
+        with pytest.raises(ImportError, match="docu_craft-fake-pkg") as exc_info:
             get_renderer("pdf", "_test_missing_dep")
         assert "pip install" in str(exc_info.value)
 

@@ -1,4 +1,4 @@
-from docify.skeletons import Skeleton
+from docu_craft.skeletons import Skeleton
 
 
 class SimpleSkeleton(Skeleton):

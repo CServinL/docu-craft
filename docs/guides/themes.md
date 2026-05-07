@@ -20,7 +20,7 @@ doc.render(theme="handout")
 ## Creating a custom theme
 
 ```
-~/docify/themes/
+~/docu_craft/themes/
 └── mytheme/
     ├── style.css
     └── theme.yaml   # optional metadata
@@ -32,4 +32,4 @@ name: My Theme
 description: Custom style for my project
 ```
 
-User themes in `~/docify/themes/` override built-ins of the same name.
+User themes in `~/docu_craft/themes/` override built-ins of the same name.

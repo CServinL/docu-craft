@@ -1,6 +1,6 @@
 import pytest
-from docify import SkeletonManager, register_skeleton
-from docify.skeletons import Skeleton
+from docu_craft import SkeletonManager, register_skeleton
+from docu_craft.skeletons import Skeleton
 
 
 class TestSkeletonManager:
@@ -33,7 +33,7 @@ class TestSkeletonManager:
         assert "listed_skeleton" in SkeletonManager.list()
 
     def test_user_yaml_loaded(self, tmp_dir):
-        from docify.storage import registry, StoreKind
+        from docu_craft.storage import registry, StoreKind
         custom_store = tmp_dir / "mystore"
         skeletons_dir = custom_store / "skeletons"
         skeletons_dir.mkdir(parents=True)

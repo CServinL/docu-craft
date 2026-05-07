@@ -3,19 +3,19 @@
 ## Installation
 
 ```bash
-pip install docify
+pip install docu_craft
 # with ReportLab support
-pip install "docify[reportlab]"
+pip install "docu_craft[reportlab]"
 # everything
-pip install "docify[all]"
+pip install "docu_craft[all]"
 ```
 
 ## Basic usage
 
 ```python
-import docify
+import docu_craft
 
-docify.render("report.md", theme="scholar", format="pdf")
+docu_craft.render("report.md", theme="scholar", format="pdf")
 ```
 
 ## With frontmatter
@@ -34,7 +34,7 @@ engine: weasyprint
 
 ## Project-level config
 
-Create `.docify.yaml` next to your documents:
+Create `.docu_craft.yaml` next to your documents:
 
 ```yaml
 defaults:
@@ -44,7 +44,7 @@ defaults:
 
 ## Global defaults
 
-Create `~/docify/config.yaml`:
+Create `~/docu_craft/config.yaml`:
 
 ```yaml
 defaults:
@@ -57,7 +57,7 @@ defaults:
 Lowest → highest priority:
 
 1. Hardcoded defaults (`format=pdf`, `theme=scholar`)
-2. `~/docify/config.yaml`
-3. `.docify.yaml` (walks up from document directory)
+2. `~/docu_craft/config.yaml`
+3. `.docu_craft.yaml` (walks up from document directory)
 4. Document YAML frontmatter
 5. Explicit `render()` argument

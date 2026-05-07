@@ -1,5 +1,5 @@
 from pathlib import Path
-from docify.renderers.base import BaseRenderer
+from docu_craft.renderers.base import BaseRenderer
 
 
 class DummyRenderer(BaseRenderer):

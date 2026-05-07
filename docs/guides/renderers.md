@@ -5,7 +5,7 @@
 | Format | Engine | Status | Install |
 |--------|--------|--------|---------|
 | `pdf` | `weasyprint` (default) | ✅ | `pip install weasyprint` |
-| `pdf` | `reportlab` | 🚧 WIP | `pip install "docify[reportlab]"` |
+| `pdf` | `reportlab` | 🚧 WIP | `pip install "docu_craft[reportlab]"` |
 
 ## Selecting a renderer
 
@@ -18,7 +18,7 @@ doc.render(format="pdf", engine="weasyprint")
 # engine: reportlab
 # ---
 
-# via .docify.yaml
+# via .docu_craft.yaml
 # defaults:
 #   engine: weasyprint
 ```
@@ -26,9 +26,9 @@ doc.render(format="pdf", engine="weasyprint")
 ## Registering a third-party renderer
 
 ```python
-import docify
+import docu_craft
 
-docify.register_renderer(
+docu_craft.register_renderer(
     format="pdf",
     module_path="mypackage.renderer:MyPDFRenderer",
     engine="myengine",
@@ -43,7 +43,7 @@ doc.render(format="pdf", engine="myengine")
 
 ```python
 from pathlib import Path
-from docify.renderers.base import BaseRenderer
+from docu_craft.renderers.base import BaseRenderer
 
 class MyRenderer(BaseRenderer):
     def render(self, document, output: Path) -> Path:

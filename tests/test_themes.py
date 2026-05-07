@@ -1,6 +1,6 @@
 import pytest
-from docify import ThemeManager
-from docify.themes import Theme
+from docu_craft import ThemeManager
+from docu_craft.themes import Theme
 
 
 class TestThemeManager:
@@ -29,7 +29,7 @@ class TestThemeManager:
             ThemeManager.load("nonexistent")
 
     def test_user_theme_overrides_builtin(self, tmp_dir):
-        from docify.storage import registry, StoreKind
+        from docu_craft.storage import registry, StoreKind
         custom_store = tmp_dir / "mystore"
         scholar_dir  = custom_store / "themes" / "scholar"
         scholar_dir.mkdir(parents=True)
