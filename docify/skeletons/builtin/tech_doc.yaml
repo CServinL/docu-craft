@@ -1,0 +1,21 @@
+meta:
+  name: Technical Documentation
+  description: Software/API technical document structure
+
+sections:
+  - heading: Overview
+    required: true
+  - heading: Installation
+    required: false
+  - heading: Usage
+    required: true
+  - heading: API Reference
+    required: false
+  - heading: Configuration
+    required: false
+  - heading: Examples
+    required: false
+  - heading: Troubleshooting
+    required: false
+  - heading: Changelog
+    required: false

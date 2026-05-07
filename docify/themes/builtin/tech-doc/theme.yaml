@@ -1,0 +1,5 @@
+name: Tech Doc
+description: Technical documentation — monospace code blocks, compact layout, API-friendly
+author: Docify
+version: "1.0"
+targets: [pdf, html]
