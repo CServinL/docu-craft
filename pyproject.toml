@@ -17,8 +17,18 @@ dependencies = [
 
 [project.optional-dependencies]
 reportlab = ["reportlab>=4.0"]
-docx    = ["python-docx>=1.1"]
-all     = ["docify[reportlab,docx]"]
+docx      = ["python-docx>=1.1"]
+all       = ["docify[reportlab,docx]"]
+dev       = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-v --tb=short"
 
 [tool.setuptools.packages.find]
 where   = ["."]

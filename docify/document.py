@@ -51,7 +51,7 @@ class Document:
 
     # ── internals ────────────────────────────────────────────────────────────
 
-    def _resolve_settings(self, format, engine, theme) -> dict:
+    def _resolve_settings(self, format=_SENTINEL, engine=_SENTINEL, theme=_SENTINEL) -> dict:
         """Merge config layers, lowest → highest priority."""
         # 1. hardcoded defaults + user/project config files
         cfg = load_settings(self.source.parent)
