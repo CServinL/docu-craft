@@ -37,10 +37,11 @@ graph.register(
     priority=5,
 )
 
-# md → latex  (priority 5 — secondary md→? path)
+# md → latex  (priority 5 — secondary md→? path, tagged engine=latex for preference routing)
 graph.register(
     "md", "latex",
     "docu_craft.renderers.md_latex:MdLatexTransformer",
+    engine="latex",
     priority=5,
 )
 

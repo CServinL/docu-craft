@@ -84,12 +84,32 @@ class WorkflowGraph:
     def path(self, from_fmt: str, to_fmt: str, engine: str | None = None) -> list[tuple[str, str]]:
         """
         Return (from, to) edge pairs for the preferred path from from_fmt to to_fmt.
-        Uses Dijkstra with edge weight=priority so lower-priority paths win.
-        Raises nx.NetworkXNoPath if unreachable.
+
+        When engine is specified, edges tagged with that engine get a 10x weight
+        reduction (strongly preferred) and edges tagged with a different engine get
+        a 10x weight increase (strongly avoided). Untagged edges are neutral.
+        This makes 'engine=latex' route md→pdf through md→latex→pdf automatically.
         """
         from_fmt = from_fmt.lower()
-        to_fmt = to_fmt.lower()
-        nodes = nx.dijkstra_path(self._graph, from_fmt, to_fmt, weight="weight")
+        to_fmt   = to_fmt.lower()
+        eng      = engine.lower() if engine else None
+
+        def _score(attrs: dict) -> float:
+            edge_engine = attrs.get("engine")
+            base = attrs.get("weight", 10)
+            if eng is None:
+                return base
+            if edge_engine == eng:
+                return base * 0.1   # strongly prefer
+            if edge_engine is not None:
+                return base * 10    # strongly avoid other engines
+            return base             # neutral
+
+        def weight_fn(u, v, data):
+            # MultiDiGraph: data is {key: edge_attrs} — pick best scoring edge
+            return min(_score(attrs) for attrs in data.values())
+
+        nodes = nx.dijkstra_path(self._graph, from_fmt, to_fmt, weight=weight_fn)
         return list(zip(nodes, nodes[1:]))
 
     def run(
