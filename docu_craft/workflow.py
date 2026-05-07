@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import importlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import networkx as nx
+
+_STYLE_KEYS = ("css", "preamble", "doc_class", "emoji_set")
 
 
 @dataclass
@@ -15,6 +17,7 @@ class TransformerEntry:
     path: str           # "module:ClassName"
     package: str        # PyPI name for error messages
     install: str        # pip install command
+    priority: int = 10  # lower = preferred when multiple paths exist
 
 
 class WorkflowGraph:
@@ -22,9 +25,9 @@ class WorkflowGraph:
     Directed acyclic graph where nodes are format strings and edges are
     transformers that convert one format to another.
 
-    Formats are free-form strings: "md", "html", "pdf", "latex", "docx", ...
-    Each edge may carry an optional engine tag for disambiguation when multiple
-    transformers exist for the same (from, to) pair.
+    Formats: "md", "html", "pdf", "latex", "docx", ...
+    Each edge may carry an optional engine tag for disambiguation.
+    Edge weight = transformer priority; Dijkstra picks the lowest-cost path.
     """
 
     def __init__(self) -> None:
@@ -39,8 +42,8 @@ class WorkflowGraph:
         engine: str | None = None,
         package: str | None = None,
         install: str | None = None,
+        priority: int = 10,
     ) -> None:
-        """Add a transformer edge to the graph."""
         from_fmt = from_fmt.lower()
         to_fmt = to_fmt.lower()
         engine = engine.lower() if engine else None
@@ -49,20 +52,18 @@ class WorkflowGraph:
             path=module_path,
             package=pkg,
             install=install or f"pip install {pkg}",
+            priority=priority,
         )
         key = (from_fmt, to_fmt, engine)
         self._entries[key] = entry
-        self._graph.add_edge(from_fmt, to_fmt, engine=engine, key=key)
+        self._graph.add_edge(from_fmt, to_fmt, engine=engine, key=key, weight=priority)
 
-    def transformer(
-        self, from_fmt: str, to_fmt: str, engine: str | None = None
-    ):
-        """Instantiate and return a transformer for a direct edge."""
+    def transformer(self, from_fmt: str, to_fmt: str, engine: str | None = None):
+        """Instantiate a transformer for a direct (from, to) edge."""
         from_fmt = from_fmt.lower()
         to_fmt = to_fmt.lower()
         engine = engine.lower() if engine else None
 
-        # Prefer exact engine match, fall back to None engine
         key = (from_fmt, to_fmt, engine)
         entry = self._entries.get(key) or self._entries.get((from_fmt, to_fmt, None))
         if entry is None:
@@ -80,16 +81,15 @@ class WorkflowGraph:
             ) from None
         return getattr(mod, cls_name)()
 
-    def path(
-        self, from_fmt: str, to_fmt: str, engine: str | None = None
-    ) -> list[tuple[str, str]]:
+    def path(self, from_fmt: str, to_fmt: str, engine: str | None = None) -> list[tuple[str, str]]:
         """
-        Return the list of (from, to) edge pairs forming the shortest path
-        from from_fmt to to_fmt.  Raises nx.NetworkXNoPath if unreachable.
+        Return (from, to) edge pairs for the preferred path from from_fmt to to_fmt.
+        Uses Dijkstra with edge weight=priority so lower-priority paths win.
+        Raises nx.NetworkXNoPath if unreachable.
         """
         from_fmt = from_fmt.lower()
         to_fmt = to_fmt.lower()
-        nodes = nx.shortest_path(self._graph, from_fmt, to_fmt)
+        nodes = nx.dijkstra_path(self._graph, from_fmt, to_fmt, weight="weight")
         return list(zip(nodes, nodes[1:]))
 
     def run(
@@ -101,13 +101,18 @@ class WorkflowGraph:
         **options,
     ) -> Any:
         """
-        Execute the shortest workflow path from from_fmt to to_fmt, threading
-        the output of each step into the input of the next.
+        Execute the preferred workflow path, threading output through each step.
+        Style options (css, preamble, doc_class, emoji_set) are only passed to
+        transformers that declare applies_style = True.
         """
+        style_opts = {k: v for k, v in options.items() if k in _STYLE_KEYS}
+        plain_opts  = {k: v for k, v in options.items() if k not in _STYLE_KEYS}
+
         edges = self.path(from_fmt, to_fmt, engine)
         for src, dst in edges:
             t = self.transformer(src, dst, engine)
-            content = t.transform(content, **options)
+            step_opts = {**plain_opts, **(style_opts if t.applies_style else {})}
+            content = t.transform(content, **step_opts)
         return content
 
     def formats(self) -> set[str]:

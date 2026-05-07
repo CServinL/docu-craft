@@ -20,6 +20,8 @@ class MdHtmlTransformer(BaseTransformer):
 
     input_fmt = "md"
     output_fmt = "html"
+    applies_style = True
+    priority = 1  # preferred md→? path
 
     def transform(self, content: str, **options) -> str:
         """

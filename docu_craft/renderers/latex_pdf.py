@@ -13,6 +13,8 @@ class LatexPdfTransformer(BaseTransformer):
 
     input_fmt = "latex"
     output_fmt = "pdf"
+    applies_style = False
+    priority = 1
 
     def transform(self, content: str, **options) -> bytes | Path:
         """

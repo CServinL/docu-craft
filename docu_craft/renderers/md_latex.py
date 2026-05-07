@@ -26,6 +26,8 @@ class MdLatexTransformer(BaseTransformer):
 
     input_fmt = "md"
     output_fmt = "latex"
+    applies_style = True
+    priority = 5  # secondary md→? path
 
     def transform(self, content: str, **options) -> str:
         """
