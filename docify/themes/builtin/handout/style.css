@@ -1,0 +1,114 @@
+/* Handout theme — courses and workshops */
+
+@page {
+  margin: 2cm 2.5cm 2cm 2cm;
+  size: A4;
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-size: 9pt;
+    color: #888;
+  }
+}
+
+body {
+  font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.6;
+  color: #222;
+}
+
+h1 {
+  font-size: 18pt;
+  color: #d44000;
+  border-bottom: 3px solid #d44000;
+  padding-bottom: 6px;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 13pt;
+  color: #d44000;
+  margin-top: 24px;
+}
+
+h3 {
+  font-size: 11pt;
+  color: #333;
+  margin-top: 16px;
+}
+
+p {
+  margin: 0 0 9px 0;
+}
+
+ul, ol {
+  margin: 4px 0 10px 0;
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 3px;
+}
+
+/* Callout boxes via blockquote */
+blockquote {
+  border-left: 4px solid #d44000;
+  margin: 14px 0;
+  padding: 8px 14px;
+  background: #fff5f0;
+  color: #333;
+  font-size: 10pt;
+}
+
+code {
+  background: #f0f0f0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 8.5pt;
+  font-family: "Courier New", Courier, monospace;
+}
+
+pre {
+  background: #f0f0f0;
+  border-left: 3px solid #d44000;
+  padding: 10px 14px;
+  font-size: 8.5pt;
+  font-family: "Courier New", Courier, monospace;
+  margin: 10px 0 16px 0;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0 16px 0;
+  font-size: 9.5pt;
+}
+
+th {
+  background: #d44000;
+  color: white;
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 9pt;
+}
+
+td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: top;
+}
+
+tr:nth-child(even) td {
+  background: #fdf5f2;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 18px 0;
+}

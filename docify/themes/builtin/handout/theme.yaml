@@ -1,0 +1,5 @@
+name: Handout
+description: Course handout — sans-serif, colored callouts, annotation margin
+author: Docify
+version: "1.0"
+targets: [pdf, html]
