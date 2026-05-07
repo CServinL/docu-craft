@@ -1,4 +1,4 @@
-"""DocuCraft storage abstraction.
+"""docu-craft storage abstraction.
 
 Three store kinds, searched in priority order (highest first):
 

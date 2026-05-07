@@ -1,4 +1,4 @@
-# DocuCraft
+# docu-craft
 
 Stop writing PDFs by hand. Write Markdown, get a polished document.
 
@@ -12,7 +12,7 @@ docu_craft.render("report.md", theme="scholar")
 
 ## What it does
 
-You write content in Markdown. DocuCraft handles everything else:
+You write content in Markdown. docu-craft handles everything else:
 
 - **Picks a theme** — fonts, colors, margins, tables, code blocks, all styled consistently
 - **Validates structure** — checks that your document has the sections it needs before rendering
@@ -59,7 +59,7 @@ Drop your own theme in `~/docu_craft/themes/mytheme/style.css` and use it the sa
 
 ## Skeletons
 
-Skeletons define what sections a document should have. DocuCraft tells you if something is missing before you render.
+Skeletons define what sections a document should have. docu-craft tells you if something is missing before you render.
 
 ```python
 doc = docu_craft.Document("thesis.md")
@@ -75,7 +75,7 @@ Write your own in YAML or as a Python class with custom validation logic.
 
 ## Emoji in PDFs
 
-PDF fonts don't render emoji. DocuCraft swaps them for PNG images automatically.
+PDF fonts don't render emoji. docu-craft swaps them for PNG images automatically.
 
 ```python
 docu_craft.render("notes.md", theme="scholar", emoji_set="twemoji")
@@ -123,7 +123,7 @@ docu_craft.render("file.md", theme="tech-doc")
 
 ## Extended storage
 
-Point DocuCraft at any folder — a team share, a mounted drive, a network path. It searches all of them for themes, skeletons, and emoji sets.
+Point docu-craft at any folder — a team share, a mounted drive, a network path. It searches all of them for themes, skeletons, and emoji sets.
 
 ```python
 docu_craft.add_extended_store("/mnt/team/docu_craft-assets", name="team")

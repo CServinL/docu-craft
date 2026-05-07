@@ -1,5 +1,5 @@
 name: Official
 description: Institutional/formal documents — minimal, clean, letterhead-ready
-author: DocuCraft
+author: docu-craft
 version: "1.0"
 targets: [pdf, html]

@@ -3,7 +3,7 @@
 Supported sets
 --------------
 twemoji   — CC-BY 4.0  (Twitter/jdecked) — compatible with Apache 2.0
-noto      — Apache 2.0 (Google Fonts)    — same license as DocuCraft
+noto      — Apache 2.0 (Google Fonts)    — same license as docu-craft
 
 Usage
 -----
@@ -123,7 +123,7 @@ def _extract(data: bytes, cfg: dict, size: int, out_dir: Path) -> int:
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Download an emoji PNG set for DocuCraft")
+    parser = argparse.ArgumentParser(description="Download an emoji PNG set for docu-craft")
     parser.add_argument("set", choices=list(_SETS), help="Emoji set to download")
     parser.add_argument("--size",  type=int, default=72, help="PNG size in px (default: 72)")
     parser.add_argument("--force", action="store_true",  help="Re-download even if already present")

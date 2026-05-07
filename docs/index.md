@@ -1,4 +1,4 @@
-# DocuCraft
+# docu-craft
 
 Convert Markdown into polished documents with reusable themes and skeletons.
 

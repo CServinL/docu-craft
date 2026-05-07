@@ -1,5 +1,5 @@
 name: Scholar
 description: Academic article style — serif fonts, wide margins, formal structure
-author: DocuCraft
+author: docu-craft
 version: "1.0"
 targets: [pdf, html]
