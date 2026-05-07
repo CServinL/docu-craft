@@ -6,7 +6,8 @@ from .storage import StorageRegistry, StoreKind, Store, registry
 DOCIFY_HOME   = Path.home() / "docu_craft"
 _BUNDLED_ROOT = Path(__file__).parent / "assets"   # docu_craft/assets/ — mirrors ~/docu_craft/
 
-USER_CONFIG_FILE = DOCIFY_HOME / "config.yaml"
+USER_CONFIG_FILE    = DOCIFY_HOME / "config.yaml"
+USER_EMOJI_SETS_DIR = DOCIFY_HOME / "emoji-sets"
 
 _HARDCODED_DEFAULTS: dict = {
     "format":    "pdf",

@@ -9,8 +9,10 @@ style:
     body:   ["Georgia", "Times New Roman", "serif"]
     header: ["Arial", "Helvetica", "sans-serif"]
     mono:   ["Courier New", "Courier", "monospace"]
-  font_size:   11
-  line_height: 1.65
+    emoji:  ["Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", "Twemoji Mozilla"]
+  font_size:     11
+  heading_sizes: [16, 13, 11, 10, 10, 10]
+  line_height:   1.65
   page_margin: "2.5cm"
   page_size:   "a4"
   colors:
@@ -21,6 +23,114 @@ style:
     border:       "#e0e0e0"
     row_alt:      "#f7f7f9"
     code_bg:      "#f4f4f4"
+
+  # Named styles — these define every semantic element across all output formats.
+  # Each style's "font" key references fonts.body / fonts.header / fonts.mono above.
+  styles:
+    body:
+      font: body
+      size: 11
+      color: "#1a1a1a"
+      space_after: 10
+      line_height: 1.65
+
+    heading1:
+      font: header
+      size: 16
+      color: "#1a1a2e"
+      bold: true
+      space_before: 24
+      space_after: 8
+
+    heading2:
+      font: header
+      size: 13
+      color: "#1a1a2e"
+      bold: true
+      space_before: 20
+      space_after: 6
+
+    heading3:
+      font: header
+      size: 11
+      color: "#1a1a2e"
+      bold: true
+      space_before: 16
+      space_after: 4
+
+    heading4:
+      font: header
+      size: 10
+      color: "#333333"
+      bold: true
+      space_before: 12
+      space_after: 4
+
+    heading5:
+      font: header
+      size: 10
+      color: "#555555"
+      bold: true
+      space_before: 10
+      space_after: 3
+
+    heading6:
+      font: header
+      size: 10
+      color: "#555555"
+      italic: true
+      space_before: 8
+      space_after: 2
+
+    code_block:
+      font: mono
+      size: 9
+      background: "#f4f4f4"
+      space_before: 8
+      space_after: 12
+
+    code_inline:
+      font: mono
+      size: 9
+      background: "#f4f4f4"
+
+    bold:
+      font: body
+      bold: true
+
+    italic:
+      font: body
+      italic: true
+
+    table_header:
+      font: header
+      size: 9
+      color: "#ffffff"
+      bold: true
+      background: "#1a1a2e"
+
+    table_cell:
+      font: body
+      size: 9.5
+
+    table_cell_alt:
+      font: body
+      size: 9.5
+      background: "#f7f7f9"
+
+    list_item:
+      font: body
+      size: 11
+      space_after: 4
+
+    quote:
+      font: body
+      size: 10
+      color: "#555555"
+      italic: true
+      background: "#f9f9fb"
+      space_before: 10
+      space_after: 10
 
 html:
   css: style.css

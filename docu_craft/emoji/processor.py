@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 
 try:
@@ -15,8 +16,14 @@ def codepoint_filename(char: str) -> str:
     return "-".join(f"{ord(c):04x}" for c in char) + ".png"
 
 
+def _to_data_uri(path: Path) -> str:
+    data = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:image/png;base64,{data}"
+
+
 def replace_emoji(html: str, set_dir: Path, size_em: float = 1.2) -> str:
-    """Replace emoji characters in html with <img> tags from set_dir.
+    """Replace emoji characters in html with embedded base64 <img> tags.
+    Images are inlined as data URIs so the HTML is fully self-contained.
     Falls back to the original character if no PNG is found for it.
     """
     if not _HAS_EMOJI_LIB:
@@ -31,6 +38,7 @@ def replace_emoji(html: str, set_dir: Path, size_em: float = 1.2) -> str:
         )
 
     style = f'height:{size_em}em;vertical-align:middle;display:inline-block;'
+    cache: dict[str, str] = {}   # fname → data URI, avoids re-encoding duplicates
     result = []
 
     for token in _emoji_lib.analyze(html, non_emoji=True):
@@ -39,12 +47,13 @@ def replace_emoji(html: str, set_dir: Path, size_em: float = 1.2) -> str:
             fname = codepoint_filename(char)
             img_path = set_dir / fname
             if img_path.exists():
+                if fname not in cache:
+                    cache[fname] = _to_data_uri(img_path)
                 result.append(
-                    f'<img src="{img_path.as_posix()}" '
-                    f'style="{style}" alt="{char}">'
+                    f'<img src="{cache[fname]}" style="{style}" alt="{char}">'
                 )
             else:
-                result.append(char)   # no PNG for this one — leave as-is
+                result.append(char)
         else:
             result.append(char)
 

@@ -46,9 +46,9 @@ graph.register(
     priority=1,
 )
 
-# md → odf
+# md → odt (OpenDocument Text)
 graph.register(
-    "md", "odf",
+    "md", "odt",
     "docu_craft.renderers.md_odf:MdOdfTransformer",
     package="odfpy",
     install="pip install odfpy",
