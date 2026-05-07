@@ -16,6 +16,11 @@ _REGISTRY: dict[tuple[str, str | None], dict] = {
         "package": "weasyprint",
         "install": "pip install weasyprint",
     },
+    ("pdf", "reportlab"): {
+        "path":    "docify.renderers.reportlab_pdf:ReportLabPDFRenderer",
+        "package": "reportlab",
+        "install": 'pip install "docify[reportlab]"',
+    },
 }
 
 
