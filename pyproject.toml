@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "docu-craft"
-version     = "0.2.0"
+version     = "0.3.0"
 description = "Convert Markdown to polished documents with reusable themes"
 readme      = "README.md"
 requires-python = ">=3.10"
@@ -46,7 +46,9 @@ Documentation = "https://github.com/CServinL/docu-craft/tree/main/docs"
 reportlab = ["reportlab>=4.0"]
 docx      = ["python-docx>=1.1"]
 emoji     = ["emoji>=2.0"]
-all       = ["docu_craft[reportlab,docx,emoji]"]
+html      = ["beautifulsoup4>=4.12", "html2text>=2020.1.16"]
+pymupdf   = ["pymupdf>=1.23"]
+all       = ["docu-craft[reportlab,docx,emoji,html,pymupdf]"]
 dev       = [
     "pytest>=8.0",
     "pytest-cov>=5.0",

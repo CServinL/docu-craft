@@ -1,6 +1,24 @@
 from .base import BaseTransformer
 from ..workflow import graph
 
+# pdf → md  (requires [pymupdf] extra)
+graph.register(
+    "pdf", "md",
+    "docu_craft.renderers.pdf_md:PdfMdTransformer",
+    package="pymupdf",
+    install='pip install "docu-craft[pymupdf]"',
+    priority=1,
+)
+
+# html → md  (requires [html] extra: beautifulsoup4 + html2text)
+graph.register(
+    "html", "md",
+    "docu_craft.renderers.html_md:HtmlMdTransformer",
+    package="beautifulsoup4 html2text",
+    install='pip install "docu-craft[html]"',
+    priority=1,
+)
+
 # md → html  (priority 1 — preferred md→? path)
 graph.register(
     "md", "html",
