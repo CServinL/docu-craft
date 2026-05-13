@@ -33,22 +33,32 @@ pip install docu-craft
 # with DOCX support
 pip install "docu-craft[docx]"
 
+# with HTML → Markdown conversion
+pip install "docu-craft[html]"
+
+# with PDF → Markdown extraction
+pip install "docu-craft[pymupdf]"
+
 # everything
 pip install "docu-craft[all]"
 ```
 
 ---
 
-## Output formats
+## Conversion paths
 
-| Format | Engine | Notes |
-|--------|--------|-------|
-| PDF | WeasyPrint | via HTML — full CSS, emoji font support |
-| PDF | LaTeX | via pdflatex/xelatex — requires LaTeX installation |
-| HTML | — | embedded CSS from theme |
-| DOCX | python-docx | named styles visible in Word's Styles pane |
-| ODT | odfpy | named styles visible in LibreOffice's Styles panel |
-| LaTeX | — | direct Markdown → LaTeX source |
+docu-craft uses a weighted DAG to resolve conversions. Ask for any path — it finds the route automatically.
+
+| From | To | Engine | Notes |
+|------|----|--------|-------|
+| `md` | `pdf` | WeasyPrint (default) | via HTML — full CSS, emoji font support |
+| `md` | `pdf` | LaTeX | via pdflatex/xelatex — requires LaTeX install |
+| `md` | `html` | — | embedded CSS from theme |
+| `md` | `docx` | — | named styles visible in Word's Styles pane |
+| `md` | `odt` | — | named styles visible in LibreOffice's Styles panel |
+| `md` | `latex` | — | direct Markdown → LaTeX source |
+| `html` | `md` | — | extracts article body, strips chrome, preserves images |
+| `pdf` | `md` | — | extracts structured text, infers headings from font size |
 
 ```python
 doc = docu_craft.Document("report.md")
@@ -56,11 +66,16 @@ doc.apply_theme("scholar")
 
 doc.render(format="pdf",  output="report.pdf")
 doc.render(format="docx", output="report.docx")
-doc.render(format="odt",  output="report.odt")
 doc.render(format="html", output="report.html")
-```
 
-Multiple formats, same source, same visual style.
+# Convert a web paper to Markdown
+doc = docu_craft.Document("paper.html")
+doc.render(format="md", output="paper.md", img_dir="figures/", base_url="https://example.com/paper/")
+
+# Extract text from a PDF
+doc = docu_craft.Document("paper.pdf")
+doc.render(format="md", output="paper.md")
+```
 
 ---
 
