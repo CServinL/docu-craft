@@ -9,3 +9,6 @@ build/
 *.html
 .venv/
 venv/
+.aider*
+.coverage
+htmlcov/
