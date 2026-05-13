@@ -7,12 +7,29 @@ from .config import load_settings
 
 _SENTINEL = object()   # distinct from None so callers can pass engine=None explicitly
 
+_BINARY_FMTS = {"pdf"}
+_EXT_TO_FMT = {
+    ".md":    "md",
+    ".html":  "html",
+    ".htm":   "html",
+    ".pdf":   "pdf",
+    ".latex": "latex",
+    ".tex":   "latex",
+    ".docx":  "docx",
+    ".odt":   "odt",
+}
+
 
 class Document:
     def __init__(self, source: str | Path):
         self.source = Path(source)
-        raw = self.source.read_text(encoding="utf-8")
-        self.frontmatter, self.body = _split_frontmatter(raw)
+        self.fmt = _EXT_TO_FMT.get(self.source.suffix.lower(), "md")
+        if self.fmt in _BINARY_FMTS:
+            self.body = self.source.read_bytes()
+            self.frontmatter: dict = {}
+        else:
+            raw = self.source.read_text(encoding="utf-8")
+            self.frontmatter, self.body = _split_frontmatter(raw)
         self._theme: Theme | None       = None
         self._skeleton: Skeleton | None = None
 
@@ -41,11 +58,13 @@ class Document:
     ) -> Path:
         cfg = self._resolve_settings(format, engine, theme, emoji_set)
 
-        if self._theme is None:
+        to_fmt = cfg["format"]
+        needs_theme = not (self.fmt in _BINARY_FMTS or to_fmt == "md")
+        if needs_theme and self._theme is None:
             self._theme = ThemeManager.load(cfg["theme"])
 
         if output is None:
-            output = self.source.with_suffix(f".{cfg['format']}")
+            output = self.source.with_suffix(f".{to_fmt}")
 
         theme_opts = {}
         if self._theme:
@@ -57,8 +76,8 @@ class Document:
         output = Path(output)
         result = _workflow.run(
             self.body,
-            from_fmt="md",
-            to_fmt=cfg["format"],
+            from_fmt=self.fmt,
+            to_fmt=to_fmt,
             engine=cfg["engine"],
             emoji_set=cfg["emoji_set"],
             base_url=str(self.source.parent),

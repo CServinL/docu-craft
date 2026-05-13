@@ -1,11 +1,7 @@
 from pathlib import Path
-from unittest.mock import patch, mock_open
 
-from docu_craft.storage import (
-    StoreKind,
-    StorageRegistry,
-    registry,
-)
+from docu_craft.storage import StoreKind, StorageRegistry, registry
+
 
 def test_add_store():
     store = registry.add("/path/to/store", kind=StoreKind.EXTENDED, name="test_store")
@@ -13,31 +9,56 @@ def test_add_store():
     assert store.kind == "extended"
     assert store.name == "test_store"
 
+
 def test_remove_store():
     store = registry.add("/path/to/store", kind=StoreKind.EXTENDED, name="test_store")
     registry.remove("/path/to/store")
     assert not any(s.path == Path("/path/to/store") for s in registry.all())
 
-@patch('os.listdir')
-def test_search(mock_listdir):
-    mock_listdir.return_value = ["theme1", "theme2"]
-    with patch('docu_craft.storage.registry.search', return_value=[Path("/path/to/store")]):
-        themes = registry.search("themes")
-        assert themes == [Path("/path/to/store/themes")]
 
-@patch('os.listdir')
-def test_list_assets(mock_listdir):
-    mock_listdir.return_value = ["asset1", "asset2"]
-    with patch('docu_craft.storage.registry.search', return_value=[Path("/path/to/store")]):
-        assets = registry.list_assets("assets")
-        assert assets == ["asset1", "asset2"]
+def test_search(tmp_path):
+    themes_dir = tmp_path / "themes"
+    themes_dir.mkdir()
+    reg = StorageRegistry()
+    reg.add(tmp_path, kind=StoreKind.EXTENDED, name="test")
+    result = reg.search("themes")
+    assert result == [themes_dir]
 
-@patch('os.listdir')
-def test_find_asset(mock_listdir):
-    mock_listdir.return_value = ["asset1"]
-    with patch('docu_craft.storage.registry.search', return_value=[Path("/path/to/store")]):
-        asset = registry.find_asset("assets", "asset1")
-        assert asset == Path("/path/to/store/assets/asset1")
+
+def test_search_missing_subdir_excluded(tmp_path):
+    reg = StorageRegistry()
+    reg.add(tmp_path, kind=StoreKind.EXTENDED, name="test")
+    result = reg.search("themes")  # themes/ not created
+    assert result == []
+
+
+def test_list_assets(tmp_path):
+    assets_dir = tmp_path / "assets"
+    assets_dir.mkdir()
+    (assets_dir / "asset1").mkdir()
+    (assets_dir / "asset2").mkdir()
+    reg = StorageRegistry()
+    reg.add(tmp_path, kind=StoreKind.EXTENDED, name="test")
+    result = reg.list_assets("assets")
+    assert "asset1" in result
+    assert "asset2" in result
+
+
+def test_find_asset(tmp_path):
+    assets_dir = tmp_path / "assets"
+    assets_dir.mkdir()
+    (assets_dir / "asset1").mkdir()
+    reg = StorageRegistry()
+    reg.add(tmp_path, kind=StoreKind.EXTENDED, name="test")
+    result = reg.find_asset("assets", "asset1")
+    assert result == assets_dir / "asset1"
+
+
+def test_find_asset_missing_returns_none(tmp_path):
+    reg = StorageRegistry()
+    reg.add(tmp_path, kind=StoreKind.EXTENDED, name="test")
+    assert reg.find_asset("assets", "nonexistent") is None
+
 
 def test_store_subdir_helpers():
     s = StorageRegistry()
@@ -46,6 +67,7 @@ def test_store_subdir_helpers():
     assert store.themes_dir() == store_path / "themes"
     assert store.skeletons_dir() == store_path / "skeletons"
     assert store.emoji_dir() == store_path / "emoji-sets"
+
 
 def test_bundled_last_in_priority():
     s = StorageRegistry()

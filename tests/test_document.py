@@ -63,6 +63,28 @@ class TestSettingsResolution:
         out.unlink()
 
 
+class TestPdfSource:
+    def test_document_loads_pdf_as_bytes(self, tmp_path):
+        from weasyprint import HTML
+        pdf_bytes = HTML(string="<h1>Test</h1><p>Hello.</p>").write_pdf()
+        pdf_file = tmp_path / "test.pdf"
+        pdf_file.write_bytes(pdf_bytes)
+        doc = Document(pdf_file)
+        assert doc.fmt == "pdf"
+        assert isinstance(doc.body, bytes)
+        assert doc.frontmatter == {}
+
+    def test_document_renders_pdf_to_md(self, tmp_path):
+        from weasyprint import HTML
+        pdf_bytes = HTML(string="<h1>Hello PDF</h1><p>Some text.</p>").write_pdf()
+        pdf_file = tmp_path / "test.pdf"
+        pdf_file.write_bytes(pdf_bytes)
+        doc = Document(pdf_file)
+        out = doc.render(format="md", output=tmp_path / "test.md")
+        assert out.exists()
+        assert "Hello PDF" in out.read_text(encoding="utf-8")
+
+
 class TestFluentApi:
     def test_apply_theme_returns_self(self, sample_md):
         doc = Document(sample_md)

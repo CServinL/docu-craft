@@ -1,21 +1,22 @@
-import os
 from pathlib import Path
 import yaml
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 
 from docu_craft.config import (
-    DOCIFY_HOME,
-    USER_CONFIG_FILE,
     _HARDCODED_DEFAULTS,
     ensure_home,
     add_extended_store,
     load_settings,
 )
 
-def test_ensure_home():
-    with patch('os.makedirs') as makedirs:
+
+def test_ensure_home(tmp_path):
+    with patch("docu_craft.config.DOCIFY_HOME", tmp_path):
         ensure_home()
-        makedirs.assert_called_once_with(DOCIFY_HOME, parents=True, exist_ok=True)
+    assert (tmp_path / "themes").is_dir()
+    assert (tmp_path / "skeletons").is_dir()
+    assert (tmp_path / "emoji-sets").is_dir()
+
 
 def test_add_extended_store():
     path = Path("/path/to/store")
@@ -24,53 +25,51 @@ def test_add_extended_store():
     assert store.kind == "extended"
     assert store.name == str(path)
 
-@patch('builtins.open', new_callable=mock_open, read_data=yaml.dump({
-    "defaults": {"format": "html"},
-    "extended_stores": [{"path": "/path/to/extended_store"}]
-}))
-def test_load_settings_user_config(mock_file):
-    settings = load_settings()
-    assert settings == {
-        **_HARDCODED_DEFAULTS,
-        "format": "html"
-    }
-    mock_file.assert_called_once_with(USER_CONFIG_FILE, 'r', encoding='utf-8')
 
-@patch('builtins.open', new_callable=mock_open, read_data=yaml.dump({
-    "defaults": {"format": "latex"}
-}))
-def test_load_settings_project_config(mock_file):
-    project_dir = Path("/path/to/project")
-    settings = load_settings(project_dir)
-    assert settings == {
-        **_HARDCODED_DEFAULTS,
-        "format": "latex"
-    }
-    mock_file.assert_called_once_with(project_dir / ".docu_craft.yaml", 'r', encoding='utf-8')
+def test_load_settings_user_config(tmp_path):
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(yaml.dump({"defaults": {"format": "html"}}), encoding="utf-8")
+    with patch("docu_craft.config.USER_CONFIG_FILE", cfg):
+        settings = load_settings()
+    assert settings == {**_HARDCODED_DEFAULTS, "format": "html"}
 
-@patch('builtins.open', new_callable=mock_open, read_data=yaml.dump({
-    "defaults": {"format": "html"},
-    "extended_stores": [{"path": "/path/to/extended_store"}]
-}))
-def test_load_settings_with_extended_stores(mock_file):
-    settings = load_settings()
-    assert settings == {
-        **_HARDCODED_DEFAULTS,
-        "format": "html"
-    }
-    mock_file.assert_called_once_with(USER_CONFIG_FILE, 'r', encoding='utf-8')
 
-@patch('builtins.open', new_callable=mock_open, read_data=yaml.dump({
-    "defaults": {"format": "latex"}
-}))
-def test_load_settings_project_config_takes_priority(mock_file):
-    project_dir = Path("/path/to/project")
-    settings = load_settings(project_dir)
-    assert settings == {
-        **_HARDCODED_DEFAULTS,
-        "format": "latex"
-    }
-    mock_file.assert_called_once_with(project_dir / ".docu_craft.yaml", 'r', encoding='utf-8')
+def test_load_settings_project_config(tmp_path):
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+    (project_dir / ".docu_craft.yaml").write_text(
+        yaml.dump({"defaults": {"format": "latex"}}), encoding="utf-8"
+    )
+    with patch("docu_craft.config.USER_CONFIG_FILE", tmp_path / "nonexistent.yaml"):
+        settings = load_settings(project_dir)
+    assert settings == {**_HARDCODED_DEFAULTS, "format": "latex"}
+
+
+def test_load_settings_with_extended_stores(tmp_path):
+    extended = tmp_path / "extended_store"
+    extended.mkdir()
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(
+        yaml.dump({"defaults": {"format": "html"}, "extended_stores": [str(extended)]}),
+        encoding="utf-8",
+    )
+    with patch("docu_craft.config.USER_CONFIG_FILE", cfg):
+        settings = load_settings()
+    assert settings == {**_HARDCODED_DEFAULTS, "format": "html"}
+
+
+def test_load_settings_project_config_takes_priority(tmp_path):
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+    (project_dir / ".docu_craft.yaml").write_text(
+        yaml.dump({"defaults": {"format": "latex"}}), encoding="utf-8"
+    )
+    user_cfg = tmp_path / "config.yaml"
+    user_cfg.write_text(yaml.dump({"defaults": {"format": "html"}}), encoding="utf-8")
+    with patch("docu_craft.config.USER_CONFIG_FILE", user_cfg):
+        settings = load_settings(project_dir)
+    assert settings == {**_HARDCODED_DEFAULTS, "format": "latex"}
+
 
 def test_missing_user_config_does_not_raise():
     result = load_settings(None)

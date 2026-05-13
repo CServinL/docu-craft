@@ -1,23 +1,31 @@
 from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 
 from docu_craft.emoji.manager import EmojiManager
 
-def test_set_dir():
-    with patch('docu_craft.storage.registry.find_asset', return_value=Path("/path/to/emoji-set")):
+
+def test_set_dir(tmp_path):
+    emoji_dir = tmp_path / "emoji-sets" / "twemoji"
+    emoji_dir.mkdir(parents=True)
+    with patch("docu_craft.storage.registry.find_asset", return_value=emoji_dir):
         path = EmojiManager.set_dir("twemoji")
-        assert path == Path("/path/to/emoji-set")
+    assert path == emoji_dir
 
-@patch('os.listdir')
-def test_list(mock_listdir):
-    mock_listdir.return_value = ["set1", "set2"]
-    with patch('docu_craft.storage.registry.search', return_value=[Path("/path/to/store")]):
+
+def test_set_dir_not_found_raises():
+    with patch("docu_craft.storage.registry.find_asset", return_value=None):
+        try:
+            EmojiManager.set_dir("nonexistent")
+            assert False, "should have raised"
+        except FileNotFoundError:
+            pass
+
+
+def test_list(tmp_path):
+    emoji_dir = tmp_path / "emoji-sets"
+    (emoji_dir / "set1").mkdir(parents=True)
+    (emoji_dir / "set2").mkdir(parents=True)
+    with patch("docu_craft.emoji.manager.registry.search", return_value=[emoji_dir]):
         available_sets = EmojiManager.list()
-        assert available_sets == ["set1", "set2"]
-
-@patch('os.listdir')
-def test_find_asset(mock_listdir):
-    mock_listdir.return_value = ["asset1"]
-    with patch('docu_craft.storage.registry.search', return_value=[Path("/path/to/store")]):
-        asset = EmojiManager.find_asset("assets", "asset1")
-        assert asset == Path("/path/to/store/assets/asset1")
+    assert "set1" in available_sets
+    assert "set2" in available_sets

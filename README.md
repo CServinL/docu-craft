@@ -250,6 +250,19 @@ The renderer graph is a weighted DAG — preference between equivalent paths (e.
 
 ---
 
+## Demo
+
+The `demo/` folder contains a ready-to-run example:
+
+```bash
+cd demo
+python render.py
+```
+
+`render.py` exercises every major conversion path — PDF, HTML, DOCX, ODT, LaTeX, and the html→md and pdf→md extractors. Output files land in `demo/` alongside the script.
+
+---
+
 ## License
 
 Apache 2.0 © Christian A. Servin Lozano
