@@ -1,5 +1,7 @@
 # docu-craft
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-CServinL-ea4aaa?logo=github)](https://github.com/sponsors/CServinL)
+
 Stop writing PDFs by hand. Write Markdown, get a polished document.
 
 ```python

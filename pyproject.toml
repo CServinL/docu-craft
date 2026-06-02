@@ -41,6 +41,7 @@ Homepage      = "https://github.com/CServinL/docu-craft"
 Repository    = "https://github.com/CServinL/docu-craft"
 Documentation = "https://github.com/CServinL/docu-craft/tree/main/docs"
 "Bug Tracker" = "https://github.com/CServinL/docu-craft/issues"
+Funding       = "https://github.com/sponsors/CServinL"
 
 [project.optional-dependencies]
 reportlab = ["reportlab>=4.0"]
