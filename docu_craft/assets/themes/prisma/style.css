@@ -1,0 +1,209 @@
+/* Prisma theme — dark deep-blue, starry sky */
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #0a0e1a;
+  color: #e8edf8;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+body {
+  padding: 32px 40px 64px;
+  max-width: 820px;
+}
+
+/* ── Headings ────────────────────────────────────────────────────────────── */
+
+h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  border-bottom: 2px solid #4a9eff;
+  padding-bottom: 8px;
+  margin: 0 0 24px 0;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #a8c8ff;
+  border-bottom: 1px solid #1a2d4a;
+  padding-bottom: 4px;
+  margin: 36px 0 14px 0;
+  letter-spacing: 0.02em;
+}
+
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #7ab4f5;
+  margin: 24px 0 10px 0;
+}
+
+h4, h5, h6 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5a9ae0;
+  margin: 18px 0 8px 0;
+}
+
+/* ── Body text ───────────────────────────────────────────────────────────── */
+
+p {
+  margin: 0 0 14px 0;
+  color: #dce4f5;
+}
+
+a {
+  color: #4a9eff;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #82bfff;
+  text-decoration: underline;
+}
+
+strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+em {
+  color: #b0c8e8;
+  font-style: italic;
+}
+
+/* ── Lists ───────────────────────────────────────────────────────────────── */
+
+ul, ol {
+  margin: 0 0 14px 0;
+  padding-left: 24px;
+  color: #dce4f5;
+}
+
+li {
+  margin-bottom: 5px;
+}
+
+li::marker {
+  color: #4a9eff;
+}
+
+/* ── Code ────────────────────────────────────────────────────────────────── */
+
+code {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", "Courier New", monospace;
+  font-size: 12px;
+  background: #0a1628;
+  color: #82bfff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #1a2d4a;
+}
+
+pre {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", "Courier New", monospace;
+  font-size: 12px;
+  background: #0a1628;
+  border-left: 3px solid #4a9eff;
+  border-radius: 0 6px 6px 0;
+  padding: 14px 18px;
+  margin: 14px 0 20px 0;
+  overflow-x: auto;
+  color: #c8dff8;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+/* ── Blockquote ──────────────────────────────────────────────────────────── */
+
+blockquote {
+  border-left: 3px solid #4a9eff;
+  margin: 18px 0;
+  padding: 10px 18px;
+  background: #0d1829;
+  color: #9ab8d8;
+  font-style: italic;
+  border-radius: 0 6px 6px 0;
+}
+
+blockquote p {
+  margin: 0;
+  color: inherit;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 14px 0 22px 0;
+  font-size: 13px;
+}
+
+th {
+  background: #0d1e3a;
+  color: #a8c8ff;
+  font-weight: 600;
+  padding: 8px 14px;
+  text-align: left;
+  border-bottom: 2px solid #4a9eff;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+td {
+  padding: 7px 14px;
+  border-bottom: 1px solid #1a2d4a;
+  vertical-align: top;
+  color: #dce4f5;
+}
+
+tr:nth-child(even) td {
+  background: #0f1a2e;
+}
+
+tr:hover td {
+  background: #132040;
+}
+
+/* ── HR ──────────────────────────────────────────────────────────────────── */
+
+hr {
+  border: none;
+  border-top: 1px solid #1a2d4a;
+  margin: 28px 0;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0e1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e3560;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4a80;
+}

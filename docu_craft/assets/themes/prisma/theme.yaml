@@ -1,0 +1,27 @@
+name: Prisma
+description: Dark deep-blue starry sky — for Prisma desktop app and dark-mode reading
+author: docu-craft
+version: "1.0"
+targets: [html]
+
+style:
+  fonts:
+    body:   ["Inter", "Segoe UI", "system-ui", "sans-serif"]
+    header: ["Inter", "Segoe UI", "system-ui", "sans-serif"]
+    mono:   ["JetBrains Mono", "Fira Code", "Cascadia Code", "Courier New", "monospace"]
+  font_size:     13
+  heading_sizes: [22, 18, 15, 13, 12, 11]
+  line_height:   1.7
+  page_margin:   "0"
+  page_size:     "auto"
+  colors:
+    body:         "#e8edf8"
+    heading:      "#4a9eff"
+    heading_text: "#ffffff"
+    accent:       "#4a9eff"
+    border:       "#1a2d4a"
+    row_alt:      "#0f1a2e"
+    code_bg:      "#0a1628"
+
+html:
+  css: style.css
