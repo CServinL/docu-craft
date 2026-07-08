@@ -23,6 +23,29 @@ def _minimal_pdf() -> bytes:
     return HTML(string="<h1>Test</h1><p>Hello PDF world.</p>").write_pdf()
 
 
+def _table_pdf(borderless: bool = False) -> bytes:
+    """A PDF with a real table, rendered via weasyprint. `borderless=True`
+    drops all ruling lines — matching a booktabs-style academic-paper table,
+    which PyMuPDF's default "lines" table-finder strategy can't detect at
+    all (confirmed empirically: it needs actual gridlines); this project
+    uses the "text" strategy instead, which works either way."""
+    from weasyprint import HTML
+    cell = "padding:4px;"
+    hdr = cell if borderless else cell + "border-bottom:1px solid black;"
+    html = f"""<html><body>
+<h1>Report</h1>
+<p>Some intro text about the results.</p>
+<table style="border-collapse:collapse; width:100%;">
+<tr><th style="{hdr}">Task</th><th style="{hdr}">Chinchilla</th><th style="{hdr}">Gopher</th></tr>
+<tr><td style="{cell}">hyperbaton</td><td style="{cell}">54.2</td><td style="{cell}">51.7</td></tr>
+<tr><td style="{cell}">winowhy</td><td style="{cell}">62.5</td><td style="{cell}">56.7</td></tr>
+<tr><td style="{hdr}">causal_judgment</td><td style="{hdr}">57.4</td><td style="{hdr}">50.8</td></tr>
+</table>
+<p>Some concluding text.</p>
+</body></html>"""
+    return HTML(string=html).write_pdf()
+
+
 # ---------------------------------------------------------------------------
 # Graph registration
 # ---------------------------------------------------------------------------
@@ -176,3 +199,43 @@ class TestWorkflowGraph:
         # basic PDF has no images — just verify img_dir option is accepted
         result = t.transform(_minimal_pdf(), img_dir=str(tmp_path), stem="test")
         assert isinstance(result, str)
+
+    # -----------------------------------------------------------------------
+    # pdf → md table detection
+    # -----------------------------------------------------------------------
+    # A flattened table (columns joined into one run-on paragraph, e.g.
+    # "hyperbaton 54.2 51.7 winowhy 62.5 56.7 ...") is what a downstream
+    # KG-extraction consumer sees as an unbounded enumeration and tries to
+    # extract every row as an entity. Rendering the table as real markdown
+    # instead gives any consumer a structural signal ("this is a table")
+    # instead of just a dense wall of numbers.
+
+    def test_pdf_md_ruled_table_becomes_pipe_table(self):
+        t = graph.transformer("pdf", "md")
+        result = t.transform(_table_pdf(borderless=False))
+        assert "| Task | Chinchilla | Gopher |" in result
+        assert "| --- | --- | --- |" in result
+        assert "| hyperbaton | 54.2 | 51.7 |" in result
+
+    def test_pdf_md_borderless_table_becomes_pipe_table(self):
+        # Default PyMuPDF table-finder strategy needs ruling lines and
+        # would miss this entirely — the actual bug this feature fixes.
+        t = graph.transformer("pdf", "md")
+        result = t.transform(_table_pdf(borderless=True))
+        assert "| Task | Chinchilla | Gopher |" in result
+        assert "| hyperbaton | 54.2 | 51.7 |" in result
+
+    def test_pdf_md_table_not_also_flattened_as_paragraph(self):
+        # The table's own text blocks must not also be emitted as a second,
+        # flattened copy alongside the pipe-table rendering.
+        t = graph.transformer("pdf", "md")
+        result = t.transform(_table_pdf(borderless=True))
+        assert "hyperbaton 54.2 51.7" not in result
+
+    def test_pdf_md_table_appears_in_reading_order(self):
+        t = graph.transformer("pdf", "md")
+        result = t.transform(_table_pdf(borderless=True))
+        intro = result.index("Some intro text")
+        table = result.index("| Task")
+        outro = result.index("Some concluding text")
+        assert intro < table < outro

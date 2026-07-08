@@ -3,6 +3,8 @@
 Extracts text and structure from a PDF, producing clean Markdown with:
 - Headings inferred from font size relative to the body text size
 - Paragraphs with whitespace normalized
+- Tables detected via PyMuPDF's table finder and rendered as real
+  `|pipe|table|` markdown, instead of flattening rows into run-on prose
 - Page breaks optionally marked
 - Images optionally extracted to a directory (requires img_dir option)
 
@@ -39,6 +41,55 @@ def _dominant_size(blocks: list) -> float:
     return max(sizes, key=sizes.get) if sizes else 11.0
 
 
+def _extract_tables(page) -> list[tuple[float, tuple, str]]:
+    """Detect tables on a page and render each as a markdown pipe table.
+
+    PyMuPDF's default "lines" strategy needs actual ruled gridlines, which
+    most academic-paper tables don't have (booktabs-style: at most a couple
+    of horizontal rules, no vertical lines at all — confirmed against a
+    borderless test table not being found under the default strategy).
+    "text" strategy detects columns/rows from whitespace and text alignment
+    instead, catching both ruled and fully borderless tables.
+
+    Returns (y0, bbox, markdown) tuples: y0 for splicing into reading order
+    alongside paragraph blocks, bbox so the caller can skip any text block
+    that falls inside it (avoiding duplicating the same content as flattened
+    prose right after its table rendering).
+    """
+    try:
+        finder = page.find_tables(vertical_strategy="text", horizontal_strategy="text")
+    except Exception:
+        return []
+
+    results: list[tuple[float, tuple, str]] = []
+    for table in finder.tables:
+        rows = [r for r in table.extract() if any((c or "").strip() for c in r)]
+        if len(rows) < 2:
+            continue
+        n_cols = max(len(r) for r in rows)
+
+        def _cell(v: str | None) -> str:
+            return (v or "").replace("\n", " ").replace("|", "/").strip()
+
+        def _row(r: list) -> str:
+            cells = [_cell(c) for c in r] + [""] * (n_cols - len(r))
+            return "| " + " | ".join(cells) + " |"
+
+        lines = [_row(rows[0]), "| " + " | ".join(["---"] * n_cols) + " |"]
+        lines.extend(_row(r) for r in rows[1:])
+        results.append((table.bbox[1], table.bbox, "\n".join(lines)))
+    return results
+
+
+def _inside_table(block_bbox: tuple, table_bboxes: list[tuple]) -> bool:
+    """A text block is part of a detected table if its vertical center
+    falls within the table's vertical extent — cheaper and more robust
+    than exact rectangle containment, since table cell blocks sometimes
+    extend a point or two past the table's own outer bbox."""
+    center_y = (block_bbox[1] + block_bbox[3]) / 2
+    return any(t[1] - 2 <= center_y <= t[3] + 2 for t in table_bboxes)
+
+
 def pdf_to_md(
     content: bytes,
     img_dir: Path | None = None,
@@ -53,7 +104,16 @@ def pdf_to_md(
         blocks = [b for b in data["blocks"] if b["type"] == 0]  # text blocks only
         body_size = _dominant_size(blocks)
 
+        tables = _extract_tables(page)
+        table_bboxes = [t[1] for t in tables]
+        # (y0, content) pairs so tables and paragraphs interleave in the
+        # page's real reading order instead of all tables trailing their page
+        page_items: list[tuple[float, str]] = [(y0, md) for y0, _bbox, md in tables]
+
         for block in blocks:
+            if _inside_table(block["bbox"], table_bboxes):
+                continue  # already rendered as part of a detected table above
+
             lines_text = []
             heading_level = None
 
@@ -84,9 +144,12 @@ def pdf_to_md(
             paragraph = re.sub(r" {2,}", " ", paragraph)
 
             if heading_level:
-                sections.append(f"{'#' * heading_level} {paragraph}")
+                page_items.append((block["bbox"][1], f"{'#' * heading_level} {paragraph}"))
             else:
-                sections.append(paragraph)
+                page_items.append((block["bbox"][1], paragraph))
+
+        page_items.sort(key=lambda item: item[0])
+        sections.extend(content for _y0, content in page_items)
 
         # Optional image extraction
         if img_dir is not None:

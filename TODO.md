@@ -15,3 +15,9 @@ heuristic, and slower per page on CPU. Needs to stay strictly opt-in
 of `[all]`) rather than something that silently fattens every install.
 Decide whether the fidelity gain is actually worth that weight for real
 use cases before scaffolding it.
+
+Note: table fidelity specifically is now partially addressed without Marker
+— `pdf_md.py` gained PyMuPDF `find_tables()`-based table detection (`text`
+strategy, catches borderless/booktabs-style tables too), rendering real
+`|pipe|table|` markdown instead of flattening rows into prose. Re-evaluate
+whether Marker's fidelity gain is still worth its weight given that.

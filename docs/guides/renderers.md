@@ -63,7 +63,7 @@ Requires: `pip install "docu-craft[html]"`
 
 ## PDF → Markdown
 
-Extracts structured text from a PDF using PyMuPDF. Infers heading levels from font size relative to the dominant body size. Optionally extracts embedded images.
+Extracts structured text from a PDF using PyMuPDF. Infers heading levels from font size relative to the dominant body size. Detects tables (via PyMuPDF's text-based table finder, which works even on fully borderless/booktabs-style tables with no ruling lines) and renders them as real `|pipe|table|` markdown instead of flattening rows into run-on prose. Optionally extracts embedded images.
 
 ```python
 doc = docu_craft.Document("paper.pdf")
