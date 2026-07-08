@@ -1,6 +1,11 @@
 import pytest
 from docu_craft.renderers import register, graph
 from docu_craft.renderers.base import BaseTransformer
+from docu_craft.renderers.pdf_md import (
+    _coalesce_split_columns,
+    _column_numeric_flags,
+    _is_noise_row,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -239,3 +244,92 @@ class TestWorkflowGraph:
         table = result.index("| Task")
         outro = result.index("Some concluding text")
         assert intro < table < outro
+
+    # -----------------------------------------------------------------------
+    # table-detection helper functions
+    # -----------------------------------------------------------------------
+    # Regression coverage from a real paper (Hoffmann et al. 2022,
+    # Chinchilla): PyMuPDF's whitespace-based "text" table strategy
+    # over-splits a label cell when its own text has irregular internal
+    # spacing (BIG-bench task names like "movie_dialog_same_or_diff"), and
+    # separately, false-positives on plain justified prose (variable
+    # word-gaps look like column boundaries to a whitespace heuristic).
+
+    def test_column_numeric_flags_identifies_score_columns(self):
+        rows = [
+            ["hyperbaton", "54.2", "51.7"],
+            ["causal judgment", "57.4", "50.8"],
+            ["winowhy", "62.5", "56.7"],
+        ]
+        assert _column_numeric_flags(rows, n_cols=3) == [False, True, True]
+
+    def test_coalesce_split_columns_merges_over_split_label(self):
+        # "movie_dialog_same_or_diff" over-split into two label fragments
+        numeric_col = [False, False, True, True]
+        rows = [
+            ["movie", "dialog same or diff", "54.5", "50.7"],
+            ["hyperbaton", "", "54.2", "51.7"],
+        ]
+        result = _coalesce_split_columns(rows, numeric_col)
+        assert result == [
+            ["movie dialog same or diff", "54.5", "50.7"],
+            ["hyperbaton", "54.2", "51.7"],
+        ]
+
+    def test_coalesce_split_columns_leaves_all_numeric_table_untouched(self):
+        numeric_col = [True, True, True]
+        rows = [["1.92e+19", "8.0 Billion", "29968"]]
+        assert _coalesce_split_columns(rows, numeric_col) == rows
+
+    def test_coalesce_split_columns_leaves_all_label_table_untouched(self):
+        numeric_col = [False, False]
+        rows = [["Task", "Chinchilla"]]
+        assert _coalesce_split_columns(rows, numeric_col) == rows
+
+    def test_is_noise_row_drops_underscore_only_row(self):
+        assert _is_noise_row(["_", "_ _", "", "_"]) is True
+
+    def test_is_noise_row_keeps_real_data_row(self):
+        assert _is_noise_row(["hyperbaton", "54.2", "51.7"]) is False
+
+    def test_extract_tables_rejects_table_with_no_numeric_column(self):
+        # A false-positive table detection on plain prose has no reliably
+        # numeric column at all — confirmed against a real paper page
+        # (ethical-considerations prose with short bolded labels) that
+        # PyMuPDF's "text" strategy misdetected as a table. Rejecting it
+        # lets the block fall back to normal paragraph rendering instead of
+        # a garbled pipe-table.
+        from docu_craft.renderers.pdf_md import _extract_tables
+
+        class _FakeTable:
+            bbox = (0, 0, 100, 100)
+            def extract(self):
+                return [["Ethical", "Considerations"], ["Data", "described in Rae et al."]]
+
+        class _FakeFinder:
+            tables = [_FakeTable()]
+
+        class _FakePage:
+            def find_tables(self, **kw):
+                return _FakeFinder()
+
+        assert _extract_tables(_FakePage()) == []
+
+    def test_extract_tables_keeps_table_with_a_numeric_column(self):
+        from docu_craft.renderers.pdf_md import _extract_tables
+
+        class _FakeTable:
+            bbox = (0, 0, 100, 100)
+            def extract(self):
+                return [["Task", "Score"], ["hyperbaton", "54.2"], ["winowhy", "62.5"]]
+
+        class _FakeFinder:
+            tables = [_FakeTable()]
+
+        class _FakePage:
+            def find_tables(self, **kw):
+                return _FakeFinder()
+
+        results = _extract_tables(_FakePage())
+        assert len(results) == 1
+        assert "| Task | Score |" in results[0][2]

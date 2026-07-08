@@ -41,6 +41,70 @@ def _dominant_size(blocks: list) -> float:
     return max(sizes, key=sizes.get) if sizes else 11.0
 
 
+_NUMERIC_CELL_RE = re.compile(r"^[-+]?\d+(\.\d+)?%?$")
+
+
+def _is_numeric_cell(value: str | None) -> bool:
+    return bool(_NUMERIC_CELL_RE.match((value or "").strip()))
+
+
+def _column_numeric_flags(rows: list[list[str]], n_cols: int) -> list[bool]:
+    """Classify each column as majority-numeric or not, by vote across rows."""
+    flags = []
+    for c in range(n_cols):
+        values = [rows[r][c] for r in range(len(rows)) if (rows[r][c] or "").strip()]
+        frac = sum(_is_numeric_cell(v) for v in values) / len(values) if values else 0
+        flags.append(frac > 0.6)
+    return flags
+
+
+def _coalesce_split_columns(rows: list[list[str]], numeric_col: list[bool]) -> list[list[str]]:
+    """Merge adjacent non-numeric columns into one label column.
+
+    Confirmed against a real paper (Hoffmann et al. 2022, Chinchilla): a
+    BIG-bench score table's task-name column ("movie_dialog_same_or_diff")
+    sometimes renders with irregular internal spacing that PyMuPDF's
+    whitespace-based "text" table strategy misreads as a column boundary,
+    splitting one label cell into several. Score columns are reliably
+    numeric across nearly every row; label columns aren't — classifying
+    each raw column as numeric-or-not by majority vote and coalescing runs
+    of non-numeric columns recovers the table's real structure without
+    needing to fix the geometric column detection itself."""
+    if not rows:
+        return rows
+    n_cols = len(numeric_col)
+    rows = [list(r) + [""] * (n_cols - len(r)) for r in rows]
+
+    if all(numeric_col) or not any(numeric_col):
+        return rows  # nothing to coalesce — either all-numeric or all-label
+
+    coalesced = []
+    for row in rows:
+        out: list[str] = []
+        buf: list[str] = []
+        for c, val in enumerate(row):
+            if numeric_col[c]:
+                if buf:
+                    out.append(" ".join(x for x in buf if x).strip())
+                    buf = []
+                out.append(val)
+            else:
+                buf.append(val)
+        if buf:
+            out.append(" ".join(x for x in buf if x).strip())
+        coalesced.append(out)
+    return coalesced
+
+
+def _is_noise_row(row: list[str]) -> bool:
+    """Drop rows that are pure extraction noise — every cell is blank or
+    just stray underscore/dash decoration with no actual data. Confirmed
+    against the same real Chinchilla table: rows of only "_" characters
+    appear between some entries, an artifact of the source PDF's rendering,
+    not real table content."""
+    return all(not (c or "").strip(" _-\n") for c in row)
+
+
 def _extract_tables(page) -> list[tuple[float, tuple, str]]:
     """Detect tables on a page and render each as a markdown pipe table.
 
@@ -64,6 +128,21 @@ def _extract_tables(page) -> list[tuple[float, tuple, str]]:
     results: list[tuple[float, tuple, str]] = []
     for table in finder.tables:
         rows = [r for r in table.extract() if any((c or "").strip() for c in r)]
+        if len(rows) < 2:
+            continue
+        n_cols = max(len(r) for r in rows)
+        numeric_col = _column_numeric_flags(rows, n_cols)
+        if not any(numeric_col):
+            # No reliably-numeric column at all — confirmed against a real
+            # false positive (a plain prose paragraph in the same paper
+            # misdetected as a "table" by the whitespace-based strategy,
+            # since justified text has variable word-gaps that look like
+            # column boundaries). Real data tables in these papers always
+            # have at least one numeric column; bail out and let the block
+            # render as normal prose instead of a garbled pipe-table.
+            continue
+        rows = _coalesce_split_columns(rows, numeric_col)
+        rows = [r for r in rows if not _is_noise_row(r)]
         if len(rows) < 2:
             continue
         n_cols = max(len(r) for r in rows)
