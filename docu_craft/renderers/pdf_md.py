@@ -3,6 +3,8 @@
 Extracts text and structure from a PDF, producing clean Markdown with:
 - Headings inferred from font size relative to the body text size
 - Paragraphs with whitespace normalized
+- Tables detected via PyMuPDF's table finder and rendered as real
+  `|pipe|table|` markdown, instead of flattening rows into run-on prose
 - Page breaks optionally marked
 - Images optionally extracted to a directory (requires img_dir option)
 
@@ -39,6 +41,134 @@ def _dominant_size(blocks: list) -> float:
     return max(sizes, key=sizes.get) if sizes else 11.0
 
 
+_NUMERIC_CELL_RE = re.compile(r"^[-+]?\d+(\.\d+)?%?$")
+
+
+def _is_numeric_cell(value: str | None) -> bool:
+    return bool(_NUMERIC_CELL_RE.match((value or "").strip()))
+
+
+def _column_numeric_flags(rows: list[list[str]], n_cols: int) -> list[bool]:
+    """Classify each column as majority-numeric or not, by vote across rows."""
+    flags = []
+    for c in range(n_cols):
+        values = [rows[r][c] for r in range(len(rows)) if (rows[r][c] or "").strip()]
+        frac = sum(_is_numeric_cell(v) for v in values) / len(values) if values else 0
+        flags.append(frac > 0.6)
+    return flags
+
+
+def _coalesce_split_columns(rows: list[list[str]], numeric_col: list[bool]) -> list[list[str]]:
+    """Merge adjacent non-numeric columns into one label column.
+
+    Confirmed against a real paper (Hoffmann et al. 2022, Chinchilla): a
+    BIG-bench score table's task-name column ("movie_dialog_same_or_diff")
+    sometimes renders with irregular internal spacing that PyMuPDF's
+    whitespace-based "text" table strategy misreads as a column boundary,
+    splitting one label cell into several. Score columns are reliably
+    numeric across nearly every row; label columns aren't — classifying
+    each raw column as numeric-or-not by majority vote and coalescing runs
+    of non-numeric columns recovers the table's real structure without
+    needing to fix the geometric column detection itself."""
+    if not rows:
+        return rows
+    n_cols = len(numeric_col)
+    rows = [list(r) + [""] * (n_cols - len(r)) for r in rows]
+
+    if all(numeric_col) or not any(numeric_col):
+        return rows  # nothing to coalesce — either all-numeric or all-label
+
+    coalesced = []
+    for row in rows:
+        out: list[str] = []
+        buf: list[str] = []
+        for c, val in enumerate(row):
+            if numeric_col[c]:
+                if buf:
+                    out.append(" ".join(x for x in buf if x).strip())
+                    buf = []
+                out.append(val)
+            else:
+                buf.append(val)
+        if buf:
+            out.append(" ".join(x for x in buf if x).strip())
+        coalesced.append(out)
+    return coalesced
+
+
+def _is_noise_row(row: list[str]) -> bool:
+    """Drop rows that are pure extraction noise — every cell is blank or
+    just stray underscore/dash decoration with no actual data. Confirmed
+    against the same real Chinchilla table: rows of only "_" characters
+    appear between some entries, an artifact of the source PDF's rendering,
+    not real table content."""
+    return all(not (c or "").strip(" _-\n") for c in row)
+
+
+def _extract_tables(page) -> list[tuple[float, tuple, str]]:
+    """Detect tables on a page and render each as a markdown pipe table.
+
+    PyMuPDF's default "lines" strategy needs actual ruled gridlines, which
+    most academic-paper tables don't have (booktabs-style: at most a couple
+    of horizontal rules, no vertical lines at all — confirmed against a
+    borderless test table not being found under the default strategy).
+    "text" strategy detects columns/rows from whitespace and text alignment
+    instead, catching both ruled and fully borderless tables.
+
+    Returns (y0, bbox, markdown) tuples: y0 for splicing into reading order
+    alongside paragraph blocks, bbox so the caller can skip any text block
+    that falls inside it (avoiding duplicating the same content as flattened
+    prose right after its table rendering).
+    """
+    try:
+        finder = page.find_tables(vertical_strategy="text", horizontal_strategy="text")
+    except Exception:
+        return []
+
+    results: list[tuple[float, tuple, str]] = []
+    for table in finder.tables:
+        rows = [r for r in table.extract() if any((c or "").strip() for c in r)]
+        if len(rows) < 2:
+            continue
+        n_cols = max(len(r) for r in rows)
+        numeric_col = _column_numeric_flags(rows, n_cols)
+        if not any(numeric_col):
+            # No reliably-numeric column at all — confirmed against a real
+            # false positive (a plain prose paragraph in the same paper
+            # misdetected as a "table" by the whitespace-based strategy,
+            # since justified text has variable word-gaps that look like
+            # column boundaries). Real data tables in these papers always
+            # have at least one numeric column; bail out and let the block
+            # render as normal prose instead of a garbled pipe-table.
+            continue
+        rows = _coalesce_split_columns(rows, numeric_col)
+        rows = [r for r in rows if not _is_noise_row(r)]
+        if len(rows) < 2:
+            continue
+        n_cols = max(len(r) for r in rows)
+
+        def _cell(v: str | None) -> str:
+            return (v or "").replace("\n", " ").replace("|", "/").strip()
+
+        def _row(r: list) -> str:
+            cells = [_cell(c) for c in r] + [""] * (n_cols - len(r))
+            return "| " + " | ".join(cells) + " |"
+
+        lines = [_row(rows[0]), "| " + " | ".join(["---"] * n_cols) + " |"]
+        lines.extend(_row(r) for r in rows[1:])
+        results.append((table.bbox[1], table.bbox, "\n".join(lines)))
+    return results
+
+
+def _inside_table(block_bbox: tuple, table_bboxes: list[tuple]) -> bool:
+    """A text block is part of a detected table if its vertical center
+    falls within the table's vertical extent — cheaper and more robust
+    than exact rectangle containment, since table cell blocks sometimes
+    extend a point or two past the table's own outer bbox."""
+    center_y = (block_bbox[1] + block_bbox[3]) / 2
+    return any(t[1] - 2 <= center_y <= t[3] + 2 for t in table_bboxes)
+
+
 def pdf_to_md(
     content: bytes,
     img_dir: Path | None = None,
@@ -53,7 +183,16 @@ def pdf_to_md(
         blocks = [b for b in data["blocks"] if b["type"] == 0]  # text blocks only
         body_size = _dominant_size(blocks)
 
+        tables = _extract_tables(page)
+        table_bboxes = [t[1] for t in tables]
+        # (y0, content) pairs so tables and paragraphs interleave in the
+        # page's real reading order instead of all tables trailing their page
+        page_items: list[tuple[float, str]] = [(y0, md) for y0, _bbox, md in tables]
+
         for block in blocks:
+            if _inside_table(block["bbox"], table_bboxes):
+                continue  # already rendered as part of a detected table above
+
             lines_text = []
             heading_level = None
 
@@ -84,9 +223,12 @@ def pdf_to_md(
             paragraph = re.sub(r" {2,}", " ", paragraph)
 
             if heading_level:
-                sections.append(f"{'#' * heading_level} {paragraph}")
+                page_items.append((block["bbox"][1], f"{'#' * heading_level} {paragraph}"))
             else:
-                sections.append(paragraph)
+                page_items.append((block["bbox"][1], paragraph))
+
+        page_items.sort(key=lambda item: item[0])
+        sections.extend(content for _y0, content in page_items)
 
         # Optional image extraction
         if img_dir is not None:
